@@ -21,10 +21,15 @@ import type {
 
 import type {
   GetMoonStateParams,
+  GetRunnerProfileParams,
   HealthStatus,
+  JoinInput,
   MoonState,
   RunInput,
-  RunResult
+  RunResult,
+  RunnerProfile,
+  TeamInput,
+  TeamReceipt
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -53,6 +58,248 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+export const getGetRunnerProfileUrl = (params: GetRunnerProfileParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/moon/profile?${stringifiedParams}` : `/api/moon/profile`
+}
+
+export const getRunnerProfile = async (params: GetRunnerProfileParams, options?: Parameters<typeof customFetch>[1]): Promise<RunnerProfile> => {
+
+  return customFetch<RunnerProfile>(getGetRunnerProfileUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetRunnerProfileQueryKey = (params?: GetRunnerProfileParams,) => {
+    return [
+    `/api/moon/profile`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetRunnerProfileQueryOptions = <TData = Awaited<ReturnType<typeof getRunnerProfile>>, TError = ErrorType<unknown>>(params: GetRunnerProfileParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getRunnerProfile>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetRunnerProfileQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getRunnerProfile>>> = ({ signal }) => getRunnerProfile(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getRunnerProfile>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetRunnerProfileQueryResult = NonNullable<Awaited<ReturnType<typeof getRunnerProfile>>>
+export type GetRunnerProfileQueryError = ErrorType<unknown>
+
+
+
+export function useGetRunnerProfile<TData = Awaited<ReturnType<typeof getRunnerProfile>>, TError = ErrorType<unknown>>(
+ params: GetRunnerProfileParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getRunnerProfile>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetRunnerProfileQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateTeamUrl = () => {
+
+
+
+
+  return `/api/moon/teams`
+}
+
+export const createTeam = async (teamInput: TeamInput, options?: Parameters<typeof customFetch>[1]): Promise<TeamReceipt> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<TeamReceipt>(getCreateTeamUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(teamInput)
+  }
+);}
+
+
+
+
+
+export const getCreateTeamMutationKey = () => ['createTeam'] as const;
+
+export const getCreateTeamMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createTeam>>, TError,CreateTeamMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createTeam>>, TError,CreateTeamMutationVariables, TContext> => {
+
+const mutationKey = getCreateTeamMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createTeam>>, CreateTeamMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createTeam(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateTeamMutationResult = NonNullable<Awaited<ReturnType<typeof createTeam>>>
+    export type CreateTeamMutationBody = BodyType<TeamInput>
+    export type CreateTeamMutationError = ErrorType<unknown>
+    export type CreateTeamMutationVariables = {data: BodyType<TeamInput>}
+
+    export const useCreateTeam = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createTeam>>, TError,CreateTeamMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createTeam>>,
+        TError,
+        CreateTeamMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateTeamMutationOptions(options));
+    }
+
+export const getJoinTeamUrl = () => {
+
+
+
+
+  return `/api/moon/teams/join`
+}
+
+export const joinTeam = async (joinInput: JoinInput, options?: Parameters<typeof customFetch>[1]): Promise<TeamReceipt> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<TeamReceipt>(getJoinTeamUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(joinInput)
+  }
+);}
+
+
+
+
+
+export const getJoinTeamMutationKey = () => ['joinTeam'] as const;
+
+export const getJoinTeamMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof joinTeam>>, TError,JoinTeamMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof joinTeam>>, TError,JoinTeamMutationVariables, TContext> => {
+
+const mutationKey = getJoinTeamMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof joinTeam>>, JoinTeamMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  joinTeam(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type JoinTeamMutationResult = NonNullable<Awaited<ReturnType<typeof joinTeam>>>
+    export type JoinTeamMutationBody = BodyType<JoinInput>
+    export type JoinTeamMutationError = ErrorType<unknown>
+    export type JoinTeamMutationVariables = {data: BodyType<JoinInput>}
+
+    export const useJoinTeam = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof joinTeam>>, TError,JoinTeamMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof joinTeam>>,
+        TError,
+        JoinTeamMutationVariables,
+        TContext
+      > => {
+      return useMutation(getJoinTeamMutationOptions(options));
+    }
 
 export const getGetMoonStateUrl = (params: GetMoonStateParams,) => {
   const normalizedParams = new URLSearchParams();

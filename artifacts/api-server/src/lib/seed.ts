@@ -31,6 +31,9 @@ export async function seedMoon() {
     await c.query("INSERT INTO moon_stamps(user_id,route_id,earned_at,earned_with_team) VALUES(1,3,CURRENT_DATE-60,false)");
     // Imported historical community miles plus the 598.1 seeded run miles = 41,200.
     await c.query("INSERT INTO moon_settings(id,historical_miles) VALUES(1,40601.9)");
+    for (const table of ["moon_users","moon_routes","moon_teams","moon_competitions"]) {
+      await c.query(`SELECT setval(pg_get_serial_sequence('${table}','id'),(SELECT MAX(id) FROM ${table}))`);
+    }
     await c.query("COMMIT");
   } catch(e) { await c.query("ROLLBACK"); throw e; } finally { c.release(); }
 }

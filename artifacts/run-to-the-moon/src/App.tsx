@@ -10,6 +10,9 @@ import LogRun from '@/pages/log-run';
 import Completion from '@/pages/completion';
 import Passport from '@/pages/passport';
 import Competition from '@/pages/competition';
+import Teams from '@/pages/teams';
+import Planner from '@/pages/planner';
+import Stats from '@/pages/stats';
 import { Layout } from '@/components/layout';
 
 import {
@@ -32,6 +35,9 @@ function Router() {
           <Route path="/completion" component={Completion} />
           <Route path="/passport" component={Passport} />
           <Route path="/competition" component={Competition} />
+          <Route path="/teams" component={Teams} />
+          <Route path="/planner" component={Planner} />
+          <Route path="/stats" component={Stats} />
           <Route component={NotFound} />
         </Switch>
       </Layout>

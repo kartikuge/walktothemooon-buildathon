@@ -5,6 +5,68 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export interface RouteInfo {
+  id: number;
+  name: string;
+  type: string;
+  totalMiles: number;
+  emoji: string;
+  gradientFrom: string;
+  gradientTo: string;
+}
+
+export interface Stamp {
+  routeId: number;
+  routeName: string;
+  emoji: string;
+  earnedAt: string;
+  earnedWithTeam: boolean;
+}
+
+export interface TeamReceipt {
+  id: number;
+  name: string;
+  inviteCode: string;
+  routeId: number;
+  endDate: string;
+}
+
+export interface RunnerProfile {
+  routes: RouteInfo[];
+  stamps: Stamp[];
+  teams: TeamReceipt[];
+  totalMiles: number;
+  totalMinutes: number;
+  longestRun: number;
+  mapsCompleted: number;
+  currentStreak: number;
+  restDays: number[];
+}
+
+export interface TeamInput {
+  /** @minimum 1 */
+  userId: number;
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  name: string;
+  /** @minimum 1 */
+  routeId: number;
+  endDate: string;
+  today: string;
+}
+
+export interface JoinInput {
+  /** @minimum 1 */
+  userId: number;
+  /**
+     * @minLength 6
+     * @maxLength 6
+     */
+  inviteCode: string;
+}
+
 export interface User {
   id: number;
   name: string;
@@ -32,14 +94,6 @@ export interface Journey {
   endDate: string;
   completed: boolean;
   type: string;
-}
-
-export interface Stamp {
-  routeId: number;
-  routeName: string;
-  emoji: string;
-  earnedAt: string;
-  earnedWithTeam: boolean;
 }
 
 export interface Competition {
@@ -98,6 +152,11 @@ export interface RunResult {
 export interface HealthStatus {
   status: string;
 }
+
+export type GetRunnerProfileParams = {
+userId: number;
+today: string;
+};
 
 export type GetMoonStateParams = {
 userId: number;

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useUser } from "@/hooks/use-user";
-import { useGetMoonState, useLogRun, getGetMoonStateQueryKey } from "@workspace/api-client-react";
+import { useGetMoonState, useLogRun, getGetMoonStateQueryKey, getGetRunnerProfileQueryKey } from "@workspace/api-client-react";
 import { formatDate } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -65,6 +65,7 @@ export default function LogRun() {
       onSuccess: (res) => {
         // Invalidate state for all users to see updated moon counter
         queryClient.invalidateQueries({ queryKey: getGetMoonStateQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getGetRunnerProfileQueryKey() });
         
         if (res.completed) {
           const u = new URLSearchParams();

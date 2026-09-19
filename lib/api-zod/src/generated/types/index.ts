@@ -8,10 +8,16 @@
 
 export * from './competition';
 export * from './getMoonStateParams';
+export * from './getRunnerProfileParams';
 export * from './healthStatus';
+export * from './joinInput';
 export * from './journey';
 export * from './moonState';
+export * from './routeInfo';
 export * from './runInput';
+export * from './runnerProfile';
 export * from './runResult';
 export * from './stamp';
+export * from './teamInput';
+export * from './teamReceipt';
 export * from './user';

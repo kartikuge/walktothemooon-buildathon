@@ -8,6 +8,87 @@
 import * as zod from 'zod';
 
 
+export const GetRunnerProfileQueryParams = zod.object({
+  "userId": zod.coerce.number().int(),
+  "today": zod.coerce.string()
+})
+
+export const GetRunnerProfileResponse = zod.object({
+  "routes": zod.array(zod.object({
+  "id": zod.number().int(),
+  "name": zod.string(),
+  "type": zod.string(),
+  "totalMiles": zod.number(),
+  "emoji": zod.string(),
+  "gradientFrom": zod.string(),
+  "gradientTo": zod.string()
+})),
+  "stamps": zod.array(zod.object({
+  "routeId": zod.number().int(),
+  "routeName": zod.string(),
+  "emoji": zod.string(),
+  "earnedAt": zod.string(),
+  "earnedWithTeam": zod.boolean()
+})),
+  "teams": zod.array(zod.object({
+  "id": zod.number().int(),
+  "name": zod.string(),
+  "inviteCode": zod.string(),
+  "routeId": zod.number().int(),
+  "endDate": zod.string()
+})),
+  "totalMiles": zod.number(),
+  "totalMinutes": zod.number(),
+  "longestRun": zod.number(),
+  "mapsCompleted": zod.number().int(),
+  "currentStreak": zod.number().int(),
+  "restDays": zod.array(zod.number().int())
+})
+
+
+
+export const createTeamBodyNameMax = 80;
+
+
+
+
+export const CreateTeamBody = zod.object({
+  "userId": zod.number().int().min(1),
+  "name": zod.string().min(1).max(createTeamBodyNameMax),
+  "routeId": zod.number().int().min(1),
+  "endDate": zod.string(),
+  "today": zod.string()
+})
+
+export const CreateTeamResponse = zod.object({
+  "id": zod.number().int(),
+  "name": zod.string(),
+  "inviteCode": zod.string(),
+  "routeId": zod.number().int(),
+  "endDate": zod.string()
+})
+
+
+
+export const joinTeamBodyInviteCodeMin = 6;
+export const joinTeamBodyInviteCodeMax = 6;
+
+
+
+export const JoinTeamBody = zod.object({
+  "userId": zod.number().int().min(1),
+  "inviteCode": zod.string().min(joinTeamBodyInviteCodeMin).max(joinTeamBodyInviteCodeMax)
+})
+
+export const JoinTeamResponse = zod.object({
+  "id": zod.number().int(),
+  "name": zod.string(),
+  "inviteCode": zod.string(),
+  "routeId": zod.number().int(),
+  "endDate": zod.string()
+})
+
+
 export const GetMoonStateQueryParams = zod.object({
   "userId": zod.coerce.number().int(),
   "today": zod.coerce.string()

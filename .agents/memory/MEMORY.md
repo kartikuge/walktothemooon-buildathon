@@ -1,1 +1,0 @@
-- [P0 Passport scope](passport-scope.md) — minimal earned-stamp destination reconciles the required demo path with deferred P1.

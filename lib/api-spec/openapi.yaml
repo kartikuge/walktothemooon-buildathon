@@ -11,6 +11,46 @@ tags:
   - name: health
     description: Health operations
 paths:
+  /moon/profile:
+    get:
+      operationId: getRunnerProfile
+      parameters:
+        - {name: userId, in: query, required: true, schema: {type: integer}}
+        - {name: today, in: query, required: true, schema: {type: string}}
+      responses:
+        "200":
+          description: Route catalog, passport and lifetime stats
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/RunnerProfile"}
+  /moon/teams:
+    post:
+      operationId: createTeam
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/TeamInput"}
+      responses:
+        "201":
+          description: Created team
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/TeamReceipt"}
+  /moon/teams/join:
+    post:
+      operationId: joinTeam
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/JoinInput"}
+      responses:
+        "200":
+          description: Joined team
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/TeamReceipt"}
   /moon/state:
     get:
       operationId: getMoonState
@@ -52,6 +92,54 @@ paths:
                 $ref: "#/components/schemas/HealthStatus"
 components:
   schemas:
+    RouteInfo:
+      type: object
+      required: [id, name, type, totalMiles, emoji, gradientFrom, gradientTo]
+      properties:
+        id: {type: integer}
+        name: {type: string}
+        type: {type: string}
+        totalMiles: {type: number}
+        emoji: {type: string}
+        gradientFrom: {type: string}
+        gradientTo: {type: string}
+    RunnerProfile:
+      type: object
+      required: [routes, stamps, teams, totalMiles, totalMinutes, longestRun, mapsCompleted, currentStreak, restDays]
+      properties:
+        routes: {type: array, items: {$ref: "#/components/schemas/RouteInfo"}}
+        stamps: {type: array, items: {$ref: "#/components/schemas/Stamp"}}
+        teams: {type: array, items: {$ref: "#/components/schemas/TeamReceipt"}}
+        totalMiles: {type: number}
+        totalMinutes: {type: number}
+        longestRun: {type: number}
+        mapsCompleted: {type: integer}
+        currentStreak: {type: integer}
+        restDays: {type: array, items: {type: integer}}
+    TeamInput:
+      type: object
+      required: [userId, name, routeId, endDate, today]
+      properties:
+        userId: {type: integer, minimum: 1}
+        name: {type: string, minLength: 1, maxLength: 80}
+        routeId: {type: integer, minimum: 1}
+        endDate: {type: string}
+        today: {type: string}
+    JoinInput:
+      type: object
+      required: [userId, inviteCode]
+      properties:
+        userId: {type: integer, minimum: 1}
+        inviteCode: {type: string, minLength: 6, maxLength: 6}
+    TeamReceipt:
+      type: object
+      required: [id, name, inviteCode, routeId, endDate]
+      properties:
+        id: {type: integer}
+        name: {type: string}
+        inviteCode: {type: string}
+        routeId: {type: integer}
+        endDate: {type: string}
     User:
       type: object
       required: [id, name, avatarEmoji, restDays]
