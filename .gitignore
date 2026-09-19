@@ -31,6 +31,8 @@ node_modules
 /.sass-cache
 /connect.lock
 /coverage
+/artifacts/run-to-the-moon/test-results/
+/artifacts/run-to-the-moon/playwright-report/
 /libpeerconnection.log
 npm-debug.log
 yarn-error.log
