@@ -6,11 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface TeamReceipt {
-  leaderboardEnabled: boolean;
-  id: number;
+export interface LeaderboardMember {
+  rank: number;
+  userId: number;
   name: string;
-  inviteCode: string;
-  routeId: number;
-  endDate: string;
+  avatarEmoji: string;
+  miles: number;
 }

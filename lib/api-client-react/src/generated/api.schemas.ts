@@ -195,6 +195,7 @@ export interface Stamp {
 }
 
 export interface TeamReceipt {
+  leaderboardEnabled: boolean;
   id: number;
   name: string;
   inviteCode: string;
@@ -222,6 +223,7 @@ export interface TeamInput {
      * @maxLength 80
      */
   name: string;
+  leaderboardEnabled?: boolean;
   /** @minimum 1 */
   routeId: number;
   endDate: string;
@@ -236,6 +238,21 @@ export interface JoinInput {
      * @maxLength 6
      */
   inviteCode: string;
+}
+
+export interface LeaderboardMember {
+  rank: number;
+  userId: number;
+  name: string;
+  avatarEmoji: string;
+  miles: number;
+}
+
+export interface TeamMapLeaderboard {
+  teamId: number;
+  mapId: number;
+  leaderboardEnabled: boolean;
+  members: LeaderboardMember[];
 }
 
 export interface User {
@@ -338,6 +355,13 @@ q: string;
 export type GetRunnerProfileParams = {
 userId: number;
 today: string;
+};
+
+export type GetTeamMapLeaderboardParams = {
+/**
+ * @minimum 1
+ */
+userId: number;
 };
 
 export type GetMoonStateParams = {

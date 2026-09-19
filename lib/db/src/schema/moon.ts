@@ -13,6 +13,7 @@ export const routes = pgTable("moon_routes", {
 });
 export const teams = pgTable("moon_teams", {
   id: serial("id").primaryKey(), name: text("name").notNull(), inviteCode: text("invite_code").unique().notNull(),
+  leaderboardEnabled: boolean("leaderboard_enabled").notNull().default(false),
   ownerUserId: integer("owner_user_id").notNull().references(() => users.id),
   routeId: integer("route_id").notNull().references(() => routes.id), endDate: date("end_date").notNull(),
 });

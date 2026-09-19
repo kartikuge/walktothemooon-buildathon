@@ -25,6 +25,16 @@ import { EffortCalculator } from "@/components/effort-calculator";
 import { useQueryClient } from "@tanstack/react-query";
 import { MapPin, Search, Loader2, Plus } from "lucide-react";
 
+function getRouteImage(name: string) {
+  const n = name.toLowerCase();
+  const base = import.meta.env.BASE_URL;
+  if (n.includes("moon") || n.includes("space")) return `${base}images/moon.jpg`;
+  if (["city", "urban", "london", "paris", "pittsburgh", "philadelphia", "rome"].some(word => n.includes(word))) return `${base}images/city.jpg`;
+  if (["forest", "trail", "park", "great wall"].some(word => n.includes(word))) return `${base}images/forest.jpg`;
+  if (["mountain", "peak", "summit", "coast"].some(word => n.includes(word))) return `${base}images/mountain.jpg`;
+  return `${base}images/desert.jpg`;
+}
+
 export default function AddMap() {
   const { userId } = useUser();
   const today = formatDate(new Date());
@@ -211,20 +221,23 @@ export default function AddMap() {
         <TabsContent value="preset" className="space-y-6 animate-in fade-in">
           <div className="space-y-3">
             <Label className="text-xs uppercase tracking-wider text-muted-foreground">Select Route</Label>
-            <div className="grid grid-cols-1 gap-2">
+            <div className="grid grid-cols-2 gap-4">
               {profile.routes.map(r => (
                 <button
                   key={r.id}
                    type="button"
                    aria-pressed={presetRoute?.id === r.id}
                    onClick={() => setPresetRoute(r)}
-                  className={`text-left p-4 rounded-2xl border transition-all ${presetRoute?.id === r.id ? 'border-primary bg-primary/5 ring-2 ring-primary/20' : 'border-border bg-card hover:bg-secondary/50'}`}
+                  className={`text-left rounded-3xl overflow-hidden border shadow-sm transition-all active:scale-95 flex flex-col group ${presetRoute?.id === r.id ? 'border-primary ring-4 ring-primary/20' : 'border-border bg-card hover:shadow-md'}`}
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="font-bold text-lg flex items-center gap-2">
-                      <span className="text-2xl">{r.emoji}</span> {r.name}
-                    </div>
-                    <div className="font-mono font-bold text-muted-foreground">{r.totalMiles.toFixed(1)} mi</div>
+                  <div className="h-28 w-full relative overflow-hidden bg-muted">
+                    <img src={getRouteImage(r.name)} alt="" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                    <div className="absolute top-3 left-3 text-2xl drop-shadow-md">{r.emoji}</div>
+                  </div>
+                  <div className="p-4 flex flex-col flex-1 bg-card">
+                    <div className="font-bold text-sm leading-tight text-foreground line-clamp-2 mb-2">{r.name}</div>
+                    <div className="mt-auto font-mono font-bold text-primary text-xs uppercase tracking-wider">{r.totalMiles.toFixed(0)} mi</div>
                   </div>
                 </button>
               ))}

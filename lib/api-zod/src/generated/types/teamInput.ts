@@ -14,6 +14,7 @@ export interface TeamInput {
      * @maxLength 80
      */
   name: string;
+  leaderboardEnabled?: boolean;
   /** @minimum 1 */
   routeId: number;
   endDate: string;

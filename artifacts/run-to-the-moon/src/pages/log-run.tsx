@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useUser } from "@/hooks/use-user";
-import { useGetMoonState, useLogRun, getGetMoonStateQueryKey, getGetRunnerProfileQueryKey } from "@workspace/api-client-react";
+import { useGetMoonState, useLogRun, getGetMoonStateQueryKey, getGetRunnerProfileQueryKey, getGetTeamMapLeaderboardQueryKey } from "@workspace/api-client-react";
 import { formatDate } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -65,6 +65,10 @@ export default function LogRun() {
         // Invalidate state for all users to see updated moon counter
         queryClient.invalidateQueries({ queryKey: getGetMoonStateQueryKey() });
         queryClient.invalidateQueries({ queryKey: getGetRunnerProfileQueryKey() });
+        // Invalidate leaderboard query using base prefix to match any user/params for that map
+        if (journey.teamId && journey.mapId) {
+          queryClient.invalidateQueries({ queryKey: getGetTeamMapLeaderboardQueryKey(journey.teamId, journey.mapId) });
+        }
         
         if (res.completed) {
           const u = new URLSearchParams();

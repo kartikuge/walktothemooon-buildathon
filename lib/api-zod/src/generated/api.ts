@@ -443,6 +443,7 @@ export const GetRunnerProfileResponse = zod.object({
   "earnedWithTeam": zod.boolean()
 })),
   "teams": zod.array(zod.object({
+  "leaderboardEnabled": zod.boolean(),
   "id": zod.number().int(),
   "name": zod.string(),
   "inviteCode": zod.string(),
@@ -461,23 +462,58 @@ export const GetRunnerProfileResponse = zod.object({
 
 export const createTeamBodyNameMax = 80;
 
-
+export const createTeamBodyLeaderboardEnabledDefault = false;
 
 
 export const CreateTeamBody = zod.object({
   "userId": zod.number().int().min(1),
   "name": zod.string().min(1).max(createTeamBodyNameMax),
+  "leaderboardEnabled": zod.boolean().default(createTeamBodyLeaderboardEnabledDefault),
   "routeId": zod.number().int().min(1),
   "endDate": zod.string(),
   "today": zod.string()
 })
 
 export const CreateTeamResponse = zod.object({
+  "leaderboardEnabled": zod.boolean(),
   "id": zod.number().int(),
   "name": zod.string(),
   "inviteCode": zod.string(),
   "routeId": zod.number().int(),
   "endDate": zod.string()
+})
+
+
+/**
+ * Current members only. Actual assigned runs only, without date filtering. Miles descending, ties by ascending user ID; ranks are sequential. Disabled teams return an empty members array. Uses the existing selected-runner membership model, not account authentication.
+ */
+
+
+
+
+export const GetTeamMapLeaderboardParams = zod.object({
+  "teamId": zod.coerce.number().int().min(1),
+  "mapId": zod.coerce.number().int().min(1)
+})
+
+
+
+
+export const GetTeamMapLeaderboardQueryParams = zod.object({
+  "userId": zod.coerce.number().int().min(1)
+})
+
+export const GetTeamMapLeaderboardResponse = zod.object({
+  "teamId": zod.number().int(),
+  "mapId": zod.number().int(),
+  "leaderboardEnabled": zod.boolean(),
+  "members": zod.array(zod.object({
+  "rank": zod.number().int(),
+  "userId": zod.number().int(),
+  "name": zod.string(),
+  "avatarEmoji": zod.string(),
+  "miles": zod.number()
+}))
 })
 
 
@@ -493,6 +529,7 @@ export const JoinTeamBody = zod.object({
 })
 
 export const JoinTeamResponse = zod.object({
+  "leaderboardEnabled": zod.boolean(),
   "id": zod.number().int(),
   "name": zod.string(),
   "inviteCode": zod.string(),

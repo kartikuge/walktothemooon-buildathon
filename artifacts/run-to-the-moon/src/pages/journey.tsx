@@ -1,19 +1,82 @@
 import { useState } from "react";
 import { Link, useParams } from "wouter";
 import { useUser } from "@/hooks/use-user";
-import { useGetMoonState, getGetMoonStateQueryKey } from "@workspace/api-client-react";
+import { useGetMoonState, getGetMoonStateQueryKey, useGetTeamMapLeaderboard, getGetTeamMapLeaderboardQueryKey } from "@workspace/api-client-react";
 import { formatDate } from "@/lib/utils";
 import { ArrowLeft, Users } from "lucide-react";
 import { InteractiveMap } from "@/components/interactive-map";
 import { EffortCalculator } from "@/components/effort-calculator";
 import { MapGoalDate } from "@/components/map-goal-date";
+import { Trophy, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
+function TeamLeaderboard({ teamId, mapId, userId }: { teamId: number, mapId: number, userId: number }) {
+  const { data: leaderboard, isLoading, isError, refetch } = useGetTeamMapLeaderboard(
+    teamId, mapId,
+    { userId },
+    { query: { queryKey: getGetTeamMapLeaderboardQueryKey(teamId, mapId, { userId }), refetchInterval: 10000 } }
+  );
+
+  if (isLoading) {
+    return (
+      <section aria-label="Challenge leaderboard" className="bg-card border border-border p-5 rounded-[2rem] shadow-sm mb-8 animate-pulse">
+        <div className="h-6 w-48 bg-secondary rounded mb-4"></div>
+        <div className="space-y-3">
+          <div className="h-16 bg-secondary rounded-xl"></div>
+          <div className="h-16 bg-secondary rounded-xl"></div>
+        </div>
+      </section>
+    );
+  }
+
+  if (isError) {
+    return (
+      <section aria-label="Challenge leaderboard" className="bg-card border border-border p-5 rounded-[2rem] shadow-sm mb-8 flex flex-col items-center justify-center gap-3">
+        <span className="text-sm font-medium text-destructive">Failed to load leaderboard</span>
+        <Button size="sm" variant="outline" onClick={() => refetch()} className="rounded-full">
+          <RefreshCw size={14} className="mr-2" /> Retry
+        </Button>
+      </section>
+    );
+  }
+
+  if (!leaderboard || !leaderboard.leaderboardEnabled) return null;
+
+  return (
+    <section aria-label="Challenge leaderboard" className="bg-card border border-border p-5 rounded-[2rem] shadow-sm mb-8">
+      <div className="flex items-center gap-2 mb-4 text-primary">
+        <Trophy size={20} />
+        <h3 className="font-bold uppercase tracking-wider text-sm">Challenge Leaderboard</h3>
+      </div>
+      
+      {leaderboard.members.length === 0 ? (
+        <div className="text-center p-6 bg-secondary/30 rounded-xl border border-dashed border-border">
+          <p className="text-sm font-medium text-muted-foreground">No runs logged for this challenge yet.</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {leaderboard.members.map(member => (
+            <div key={member.userId} className={`flex items-center justify-between p-3 rounded-xl border ${member.userId === userId ? 'bg-primary/5 border-primary/20' : 'bg-background border-border'}`}>
+              <div className="flex items-center gap-3">
+                <div className="w-6 text-center font-bold text-muted-foreground">{member.rank}</div>
+                <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-xl shadow-sm">{member.avatarEmoji}</div>
+                <div className="font-bold text-sm text-foreground">{member.name} {member.userId === userId && "(You)"}</div>
+              </div>
+              <div className="font-mono font-bold text-sm text-foreground">{member.miles.toFixed(1)} <span className="text-muted-foreground text-xs">mi</span></div>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
 
 export default function JourneyDetail() {
   const { id } = useParams<{ id: string }>();
   const { userId } = useUser();
   const today = formatDate(new Date());
   
-  const { data: moonState, isLoading } = useGetMoonState(
+  const { data: moonState, isLoading, isError, refetch: refetchMoon } = useGetMoonState(
     { userId, today },
     { query: { queryKey: getGetMoonStateQueryKey({ userId, today }), refetchInterval: 10000 } }
   );
@@ -21,8 +84,17 @@ export default function JourneyDetail() {
   const journey = moonState?.journeys.find(j => j.id === id);
   const [calcDate, setCalcDate] = useState<string>("");
 
-  if (isLoading || !moonState) {
+  if (isLoading) {
     return <div className="p-6 h-screen flex items-center justify-center font-mono text-muted-foreground animate-pulse">Loading journey...</div>;
+  }
+
+  if (isError || !moonState) {
+    return (
+      <div className="p-6 h-screen flex flex-col items-center justify-center gap-4">
+        <div className="text-destructive font-bold">Failed to load journey</div>
+        <Button onClick={() => refetchMoon()} variant="outline"><RefreshCw className="mr-2" size={16} /> Retry</Button>
+      </div>
+    );
   }
 
   if (!journey) {
@@ -80,6 +152,10 @@ export default function JourneyDetail() {
             <span className="font-mono font-bold text-lg">{journey.memberCount}</span>
           </div>
         </div>
+
+        {journey.teamId && journey.mapId && (
+          <TeamLeaderboard teamId={journey.teamId} mapId={journey.mapId} userId={userId} />
+        )}
 
         <div className="mb-8">
           <InteractiveMap 

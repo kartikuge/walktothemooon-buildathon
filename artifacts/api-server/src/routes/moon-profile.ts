@@ -2,10 +2,22 @@ import { Router } from "express";
 import { randomInt } from "node:crypto";
 import { pool } from "@workspace/db";
 import { CreateTeamBody, JoinTeamBody, GetRunnerProfileResponse } from "@workspace/api-zod";
+import { teamMapLeaderboard } from "../lib/team-leaderboard";
 
 const router = Router();
 const dayValid = (s: string) => /^\d{4}-\d{2}-\d{2}$/.test(s) && Number.isFinite(Date.parse(s)) && new Date(s).toISOString().slice(0,10) === s;
-const receiptColumns = `id,name,invite_code AS "inviteCode",route_id AS "routeId",end_date::text AS "endDate"`;
+const receiptColumns = `id,name,invite_code AS "inviteCode",route_id AS "routeId",end_date::text AS "endDate",leaderboard_enabled AS "leaderboardEnabled"`;
+
+router.get("/moon/teams/:teamId/maps/:mapId/leaderboard",async(req,res)=>{
+  try {
+    res.json(await teamMapLeaderboard(Number(req.params.teamId),Number(req.params.mapId),Number(req.query.userId)));
+  } catch(err) {
+    const status=(err as {status?:number}).status;
+    if(status) {res.status(status).json({error:(err as Error).message});return;}
+    req.log.error({err},"Leaderboard loading failed");
+    res.status(500).json({error:"Could not load this leaderboard. Please try again."});
+  }
+});
 
 router.get("/moon/profile", async (req,res) => {
   const userId=Number(req.query.userId), today=String(req.query.today);
@@ -47,7 +59,7 @@ router.post("/moon/teams",async(req,res)=>{
     let code:string;
     do {code=Array.from({length:6},()=>alphabet[randomInt(alphabet.length)]).join("");}
     while((await c.query("SELECT id FROM moon_teams WHERE invite_code=$1",[code])).rowCount);
-    const team=(await c.query(`INSERT INTO moon_teams(name,invite_code,owner_user_id,route_id,end_date) VALUES($1,$2,$3,$4,$5) RETURNING ${receiptColumns}`,[name,code,v.userId,v.routeId,v.endDate])).rows[0];
+    const team=(await c.query(`INSERT INTO moon_teams(name,invite_code,owner_user_id,route_id,end_date,leaderboard_enabled) VALUES($1,$2,$3,$4,$5,$6) RETURNING ${receiptColumns}`,[name,code,v.userId,v.routeId,v.endDate,v.leaderboardEnabled??false])).rows[0];
     await c.query("INSERT INTO moon_members(team_id,user_id) VALUES($1,$2)",[team.id,v.userId]);
     await c.query("INSERT INTO moon_maps(team_id,route_id,end_date,legacy_key) VALUES($1,$2,$3,$4)",[team.id,v.routeId,v.endDate,`team-${team.id}`]);
     await c.query("COMMIT");res.status(201).json(team);

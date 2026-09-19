@@ -27,6 +27,7 @@ const createTeamSchema = z.object({
   name: z.string().min(1, "Name is required").max(80, "Name too long"),
   routeId: z.coerce.number().min(1, "Select a route"),
   endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format"),
+  leaderboardEnabled: z.boolean().default(false),
 });
 
 const joinTeamSchema = z.object({
@@ -44,7 +45,7 @@ export default function Teams() {
     { query: { queryKey: getGetRunnerProfileQueryKey({ userId, today }), refetchInterval: 10000 } }
   );
 
-  const { data: moonState, isLoading: isMoonLoading } = useGetMoonState(
+  const { data: moonState, isLoading: isMoonLoading, isError: isMoonError, refetch: refetchMoon } = useGetMoonState(
     { userId, today },
     { query: { queryKey: getGetMoonStateQueryKey({ userId, today }), refetchInterval: 10000 } }
   );
@@ -58,7 +59,7 @@ export default function Teams() {
 
   const createForm = useForm<z.infer<typeof createTeamSchema>>({
     resolver: zodResolver(createTeamSchema),
-    defaultValues: { name: "", routeId: 0, endDate: "" },
+    defaultValues: { name: "", routeId: 0, endDate: "", leaderboardEnabled: false },
   });
 
   const joinForm = useForm<z.infer<typeof joinTeamSchema>>({
@@ -84,6 +85,7 @@ export default function Teams() {
         name: data.name,
         routeId: data.routeId,
         endDate: data.endDate,
+        leaderboardEnabled: data.leaderboardEnabled,
         today
       }
     }, {
@@ -121,10 +123,10 @@ export default function Teams() {
   };
 
   if (isProfileLoading || isMoonLoading) return <div className="p-8 text-center font-mono text-muted-foreground animate-pulse mt-12">Loading teams...</div>;
-  if (isError || !profile || !moonState) return (
+  if (isError || isMoonError || !profile || !moonState) return (
     <div className="p-8 text-center flex flex-col items-center gap-4 mt-12">
       <div className="text-destructive font-mono">Failed to load teams</div>
-      <Button onClick={() => refetch()} variant="outline"><RefreshCw className="w-4 h-4 mr-2" /> Retry</Button>
+      <Button onClick={() => { refetch(); refetchMoon(); }} variant="outline"><RefreshCw className="w-4 h-4 mr-2" /> Retry</Button>
     </div>
   );
 
@@ -135,24 +137,24 @@ export default function Teams() {
         <h1 className="text-2xl font-bold font-mono tracking-tight uppercase text-primary">My Teams</h1>
       </div>
 
-      <div className="flex gap-3">
+      <div className="flex flex-col sm:flex-row gap-4">
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
-            <Button className="flex-1 rounded-2xl shadow-lg shadow-primary/20 font-bold h-12" size="lg">
+            <Button className="w-full sm:flex-1 rounded-full shadow-lg shadow-primary/20 font-bold h-12" size="lg">
               <Plus className="w-5 h-5 mr-2" /> Create Team
             </Button>
           </DialogTrigger>
-          <DialogContent className="rounded-3xl">
+          <DialogContent className="rounded-3xl p-6 sm:p-8">
             <DialogHeader>
-              <DialogTitle className="font-mono uppercase tracking-tight">Create a New Team</DialogTitle>
-              <DialogDescription>Pick a route and an end date for your team challenge.</DialogDescription>
+              <DialogTitle className="font-sans font-bold text-2xl tracking-tight text-foreground">Create a New Team</DialogTitle>
+              <DialogDescription className="text-muted-foreground font-medium">Pick a route and an end date for your team challenge.</DialogDescription>
             </DialogHeader>
             <Form {...createForm}>
-              <form onSubmit={createForm.handleSubmit(onCreateSubmit)} className="space-y-4">
+              <form onSubmit={createForm.handleSubmit(onCreateSubmit)} className="space-y-5">
                 <FormField control={createForm.control} name="name" render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Team Name</FormLabel>
-                    <FormControl><Input className="h-12 rounded-xl" placeholder="Apollo 11" {...field} /></FormControl>
+                    <FormControl><Input className="h-14 rounded-2xl bg-secondary/50 border-transparent focus:border-primary" placeholder="Apollo 11" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
@@ -161,14 +163,14 @@ export default function Teams() {
                     <FormLabel className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Route</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={String(field.value) || undefined}>
                       <FormControl>
-                        <SelectTrigger className="h-12 rounded-xl">
+                        <SelectTrigger className="h-14 rounded-2xl bg-secondary/50 border-transparent focus:border-primary font-bold">
                           <SelectValue placeholder="Select a route" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
+                      <SelectContent className="rounded-xl">
                         {profile.routes.map(r => (
-                          <SelectItem key={r.id} value={String(r.id)}>
-                            {r.emoji} {r.name} ({r.totalMiles} mi)
+                          <SelectItem key={r.id} value={String(r.id)} className="font-bold py-3">
+                            {r.emoji} {r.name} <span className="opacity-50 text-xs font-mono ml-2">{r.totalMiles} mi</span>
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -179,11 +181,22 @@ export default function Teams() {
                 <FormField control={createForm.control} name="endDate" render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Target End Date</FormLabel>
-                    <FormControl><Input type="date" className="h-12 rounded-xl" {...field} /></FormControl>
+                    <FormControl><Input type="date" className="h-14 rounded-2xl bg-secondary/50 border-transparent focus:border-primary font-bold font-mono" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
-                <Button type="submit" className="w-full h-12 rounded-xl mt-2 font-bold" disabled={createTeam.isPending}>
+                <FormField control={createForm.control} name="leaderboardEnabled" render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-2xl border border-border p-4 bg-secondary/30 mt-2">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-sm font-bold text-foreground">Enable team leaderboard</FormLabel>
+                      <DialogDescription className="text-xs font-medium text-muted-foreground">Rank members by miles contributed</DialogDescription>
+                    </div>
+                    <FormControl>
+                      <input type="checkbox" checked={field.value} onChange={field.onChange} className="w-5 h-5 rounded border-border text-primary focus:ring-primary accent-primary" />
+                    </FormControl>
+                  </FormItem>
+                )} />
+                <Button type="submit" className="w-full h-14 rounded-full mt-6 font-bold text-lg bg-primary text-primary-foreground shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5" disabled={createTeam.isPending}>
                   {createTeam.isPending ? "Creating..." : "Launch Team"}
                 </Button>
               </form>
@@ -193,25 +206,25 @@ export default function Teams() {
 
         <Dialog open={joinOpen} onOpenChange={setJoinOpen}>
           <DialogTrigger asChild>
-            <Button variant="outline" className="flex-1 rounded-2xl border-2 border-primary/20 font-bold h-12 hover:bg-primary/5" size="lg">
+            <Button variant="outline" className="w-full sm:flex-1 rounded-full border-2 border-primary/20 font-bold h-12 text-primary hover:bg-primary/5 transition-colors" size="lg">
               Join with Code
             </Button>
           </DialogTrigger>
-          <DialogContent className="rounded-3xl">
+          <DialogContent className="rounded-3xl p-6 sm:p-8">
             <DialogHeader>
-              <DialogTitle className="font-mono uppercase tracking-tight">Join a Team</DialogTitle>
-              <DialogDescription>Enter the 6-character invite code from your friend.</DialogDescription>
+              <DialogTitle className="font-sans font-bold text-2xl tracking-tight text-foreground">Join a Team</DialogTitle>
+              <DialogDescription className="text-muted-foreground font-medium">Enter the 6-character invite code from your friend.</DialogDescription>
             </DialogHeader>
             <Form {...joinForm}>
-              <form onSubmit={joinForm.handleSubmit(onJoinSubmit)} className="space-y-4 mt-2">
+              <form onSubmit={joinForm.handleSubmit(onJoinSubmit)} className="space-y-6 mt-4">
                 <FormField control={joinForm.control} name="inviteCode" render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Invite Code</FormLabel>
-                    <FormControl><Input className="h-14 rounded-xl text-center text-2xl font-mono uppercase tracking-widest font-black" placeholder="ABCDEF" maxLength={6} {...field} /></FormControl>
+                    <FormControl><Input className="h-16 rounded-2xl bg-secondary/50 border-transparent focus:border-primary text-center text-3xl font-mono uppercase tracking-widest font-black" placeholder="ABCDEF" maxLength={6} {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
-                <Button type="submit" className="w-full h-12 rounded-xl font-bold" disabled={joinTeam.isPending}>
+                <Button type="submit" className="w-full h-14 rounded-full font-bold text-lg bg-primary text-primary-foreground shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5" disabled={joinTeam.isPending}>
                   {joinTeam.isPending ? "Joining..." : "Join Team"}
                 </Button>
               </form>
@@ -223,9 +236,10 @@ export default function Teams() {
       <div className="space-y-4 mt-8">
         <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-2">Active Rosters</h2>
         {profile.teams.length === 0 ? (
-          <div className="text-center p-8 bg-muted/30 rounded-3xl border border-dashed border-border/60">
-            <Rocket className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-30" />
+          <div className="text-center p-10 bg-secondary/30 rounded-[2rem] border border-dashed border-border flex flex-col items-center">
+            <Rocket className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-40" />
             <p className="text-muted-foreground font-medium">You aren't in any active teams.</p>
+            <Button variant="outline" className="mt-4 rounded-full font-bold uppercase tracking-widest text-xs h-10 px-6 border-primary/20 text-primary hover:bg-primary/5" onClick={() => setCreateOpen(true)}>Create a Team</Button>
           </div>
         ) : (
           profile.teams.map(team => {
@@ -233,21 +247,27 @@ export default function Teams() {
             return (
               <Card key={team.id} className="overflow-hidden border-primary/10 shadow-lg shadow-primary/5 rounded-2xl transition-transform active:scale-[0.98]">
                 <CardHeader className="pb-3 bg-card relative z-10">
-                  <div className="flex justify-between items-start">
-                    <CardTitle className="text-xl font-black font-sans flex items-center gap-3">
+                  <div className="flex flex-wrap gap-3 justify-between items-start">
+                    <CardTitle className="min-w-0 break-words text-xl font-black font-sans flex items-center gap-3">
                       <span className="text-3xl drop-shadow-sm">🤝</span> {team.name}
                     </CardTitle>
                     <button 
                       onClick={(e) => { e.preventDefault(); handleCopy(team.inviteCode); }} 
-                      className="bg-primary/10 hover:bg-primary/20 active:bg-primary/30 text-primary px-3 py-1.5 rounded-full text-sm font-bold font-mono tracking-widest flex items-center gap-2 transition-colors border border-primary/20"
+                      className="bg-primary/10 hover:bg-primary/20 active:bg-primary/30 text-primary px-3 py-1.5 rounded-full text-sm font-bold font-mono tracking-widest flex items-center gap-2 transition-colors border border-primary/20 shrink-0"
                     >
                       {team.inviteCode}
                       {copiedCode === team.inviteCode ? <CheckCircle size={16} /> : <Copy size={16} />}
                     </button>
                   </div>
-                  <CardDescription className="font-mono text-xs uppercase tracking-wider mt-2 font-bold text-muted-foreground">
-                    Target Date: <span className="text-foreground">{new Date(team.endDate).toLocaleDateString()}</span>
-                  </CardDescription>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-2">
+                    <CardDescription className="font-mono text-xs uppercase tracking-wider font-bold text-muted-foreground">
+                      Target Date: <span className="text-foreground">{new Date(team.endDate).toLocaleDateString()}</span>
+                    </CardDescription>
+                    <div className="hidden sm:block text-muted-foreground">•</div>
+                    <CardDescription className="font-mono text-xs uppercase tracking-wider font-bold text-muted-foreground">
+                      Members: <span className="text-foreground">{teamJourneys.length > 0 ? teamJourneys[0].memberCount : "Unavailable"}</span>
+                    </CardDescription>
+                  </div>
                 </CardHeader>
                 <div className="bg-card px-6 pb-2">
                   <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Team Maps</h3>

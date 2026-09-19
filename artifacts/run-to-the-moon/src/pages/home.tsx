@@ -21,8 +21,8 @@ export default function Home() {
 
   if (isLoading || !moonState) {
     return (
-      <div className="p-6 space-y-4 animate-pulse">
-        <div className="h-64 bg-secondary rounded-3xl"></div>
+      <div className="p-6 space-y-6 animate-pulse bg-background min-h-screen">
+        <div className="h-64 bg-secondary rounded-[2rem]"></div>
         <div className="h-24 bg-secondary rounded-2xl"></div>
         <div className="h-32 bg-secondary rounded-2xl"></div>
         <div className="h-32 bg-secondary rounded-2xl"></div>
@@ -34,129 +34,128 @@ export default function Home() {
   const progress = (moonMiles / moonGoal) * 100;
 
   return (
-    <div className="animate-in fade-in duration-500">
-      <div className="bg-moon-gradient text-white pt-8 pb-10 px-6 rounded-b-[2rem] shadow-xl relative overflow-hidden">
+    <div className="animate-in fade-in duration-500 bg-background min-h-screen pb-6">
+      <div className="bg-primary text-primary-foreground pt-12 pb-14 px-6 rounded-b-[2rem] shadow-[0_10px_30px_rgba(33,101,234,0.15)] relative overflow-hidden flex flex-col items-center justify-center">
         <div 
-          className="absolute inset-0 opacity-30 pointer-events-none mix-blend-overlay" 
+          className="absolute inset-0 opacity-20 pointer-events-none mix-blend-overlay" 
           style={{ backgroundImage: 'radial-gradient(circle at 50% 0%, rgba(255,255,255,0.8), transparent 70%)' }} 
         />
-        <div className="relative z-10 text-center">
-          <div className="text-xs font-bold uppercase tracking-widest text-white/70 mb-3">To the Moon</div>
-          <div className="text-5xl font-mono font-bold tracking-tighter mb-1 drop-shadow-md">
+        <div className="relative z-10 text-center w-full">
+          <div className="text-xs font-bold uppercase tracking-[0.2em] text-primary-foreground/80 mb-4">To the Moon</div>
+          <div className="text-6xl font-bold tracking-tighter mb-2 drop-shadow-sm flex items-baseline justify-center gap-1">
             {moonMiles.toLocaleString(undefined, { maximumFractionDigits: 1 })}
           </div>
-          <div className="text-lg font-mono text-white/60 mb-8">
+          <div className="text-lg text-primary-foreground/70 mb-10 font-medium">
             / {moonGoal.toLocaleString()} mi
           </div>
           
-          <div className="h-4 bg-black/40 rounded-full overflow-hidden border border-white/10 backdrop-blur-md relative">
-            <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMSIvPgo8L3N2Zz4=')] opacity-20"></div>
+          <div className="h-6 bg-black/20 rounded-full overflow-hidden border border-white/10 relative shadow-inner">
             <div 
-              className="h-full bg-gradient-to-r from-blue-400 via-indigo-300 to-white rounded-full relative transition-all duration-1000 ease-out" 
+              className="h-full bg-white rounded-full relative transition-all duration-1000 ease-out" 
               style={{ width: `${Math.max(2, Math.min(progress, 100))}%` }}
             >
-              <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 text-xl filter drop-shadow-md">🚀</div>
+              <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 text-2xl filter drop-shadow-md">🚀</div>
             </div>
           </div>
-          <div className="text-xs text-white/60 mt-3 font-medium uppercase tracking-wider">pooled by all teams</div>
+          <div className="text-xs text-primary-foreground/70 mt-4 font-semibold uppercase tracking-widest">pooled by all teams</div>
         </div>
       </div>
 
-      <div className="px-5 mt-8">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold tracking-tight">Today's Target</h2>
-          {restDay && <span className="text-xs font-bold bg-accent/20 text-accent px-2 py-1 rounded-md uppercase tracking-wider">Rest Day</span>}
+      <div className="px-6 mt-10">
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-xl font-bold tracking-tight text-foreground">Today's Target</h2>
+          {restDay && <span className="text-[10px] font-bold bg-accent text-accent-foreground px-3 py-1.5 rounded-full uppercase tracking-widest">Rest Day</span>}
         </div>
         
-        <div className="bg-card border border-border p-5 rounded-2xl shadow-sm relative overflow-hidden">
+        <div className="bg-card border border-border p-6 rounded-[2rem] shadow-sm relative overflow-hidden transition-all hover:shadow-md">
           {restDay ? (
             <div>
-              <div className="text-4xl font-mono font-bold text-muted-foreground opacity-50">{dailyTarget} mi</div>
-              <div className="text-sm font-medium mt-2 text-foreground">It's a rest day! Extra miles count toward the moon.</div>
+              <div className="text-5xl font-bold text-muted-foreground opacity-50 tracking-tighter">{dailyTarget} <span className="text-2xl font-medium">mi</span></div>
+              <div className="text-sm font-medium mt-3 text-muted-foreground">It's a rest day! Extra miles count toward the moon.</div>
             </div>
           ) : (
             <div>
-              <div className="text-4xl font-mono font-bold text-primary">{dailyTarget} mi</div>
-              <div className="text-sm font-medium mt-2 text-muted-foreground">Let's hit this target together. Every mile counts.</div>
+              <div className="text-5xl font-bold text-primary tracking-tighter">{dailyTarget} <span className="text-2xl font-medium">mi</span></div>
+              <div className="text-sm font-medium mt-3 text-muted-foreground">Let's hit this target together. Every mile counts.</div>
             </div>
           )}
         </div>
       </div>
 
-      <div className="px-5 mt-6">
+      <div className="px-6 mt-8">
         {isProfileLoading ? (
-          <div className="h-24 bg-secondary rounded-2xl animate-pulse flex items-center justify-center text-muted-foreground font-mono text-sm">
+          <div className="h-28 bg-secondary rounded-[2rem] animate-pulse flex items-center justify-center text-muted-foreground font-medium text-sm">
             Loading streak...
           </div>
         ) : isProfileError || !profile ? (
-          <div className="h-24 bg-card border border-destructive/20 rounded-2xl flex flex-col items-center justify-center gap-2 shadow-sm">
-            <span className="text-destructive font-mono text-xs">Failed to load streak</span>
-            <Button size="sm" variant="outline" onClick={() => refetchProfile()} className="h-7 text-xs">
-              <RefreshCw size={12} className="mr-1" /> Retry
+          <div className="h-28 bg-card border border-destructive/20 rounded-[2rem] flex flex-col items-center justify-center gap-3 shadow-sm">
+            <span className="text-destructive font-medium text-sm">Failed to load streak</span>
+            <Button size="sm" variant="outline" onClick={() => refetchProfile()} className="rounded-full">
+              <RefreshCw size={14} className="mr-2" /> Retry
             </Button>
           </div>
         ) : profile.currentStreak === 0 ? (
-          <div className="bg-gradient-to-r from-secondary to-secondary/50 border border-border p-5 rounded-2xl shadow-sm flex items-center gap-4">
-            <div className="p-3 bg-background rounded-full opacity-50 grayscale shadow-sm">
-              <Flame size={24} />
+          <div className="bg-secondary/50 border border-border p-6 rounded-[2rem] shadow-sm flex items-center gap-5">
+            <div className="p-4 bg-background rounded-full opacity-50 grayscale shadow-sm shrink-0">
+              <Flame size={28} />
             </div>
             <div>
-              <h3 className="font-bold text-lg leading-tight text-foreground">Start a Streak!</h3>
+              <h3 className="font-bold text-lg leading-tight text-foreground mb-1">Start a Streak</h3>
               <p className="text-sm font-medium text-muted-foreground">Log a run today to begin.</p>
             </div>
           </div>
         ) : (
-          <div className="bg-gradient-to-r from-accent/20 to-card border border-accent/30 p-5 rounded-2xl shadow-sm flex items-center gap-4">
-            <div className="p-3 bg-accent/20 text-accent rounded-full animate-pulse shadow-[0_0_15px_rgba(var(--accent),0.3)]">
-              <Flame size={24} />
+          <div className="bg-accent/30 border border-accent/50 p-6 rounded-[2rem] shadow-sm flex items-center gap-5 relative overflow-hidden">
+            <div className="p-4 bg-accent text-accent-foreground rounded-full shadow-[0_0_20px_rgba(var(--accent),0.5)] shrink-0 z-10">
+              <Flame size={28} />
             </div>
-            <div>
-              <div className="text-xs font-bold text-accent uppercase tracking-wider mb-0.5">Current Streak</div>
-              <div className="flex items-baseline gap-1">
-                <span className="text-3xl font-mono font-black text-foreground">{profile.currentStreak}</span>
-                <span className="font-medium text-muted-foreground">days</span>
+            <div className="z-10">
+              <div className="text-xs font-bold text-accent-foreground uppercase tracking-widest mb-1">Current Streak</div>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-4xl font-black text-foreground tracking-tighter">{profile.currentStreak}</span>
+                <span className="font-semibold text-muted-foreground">days</span>
               </div>
             </div>
           </div>
         )}
       </div>
 
-      <div className="px-5 mt-10 mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold tracking-tight">Active Maps</h2>
-          <Link href="/maps/add" className="text-xs font-bold bg-primary text-primary-foreground px-3 py-1.5 rounded-lg uppercase tracking-wider shadow-sm">
-            + Add a Map
+      <div className="px-6 mt-10 mb-8">
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-xl font-bold tracking-tight text-foreground">Active Maps</h2>
+          <Link href="/maps/add" className="text-xs font-bold bg-secondary text-foreground px-4 py-2 rounded-full hover:bg-secondary/80 transition-colors uppercase tracking-widest">
+            + Add
           </Link>
         </div>
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-5">
           {journeys.map(j => {
             const jProgress = (j.miles / j.totalMiles) * 100;
             return (
               <Link key={j.id} href={`/journey/${j.id}`} className="block">
-                <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all active:scale-[0.98]">
+                <div className="bg-card border border-border rounded-[2rem] overflow-hidden shadow-sm hover:shadow-md transition-all active:scale-[0.98]">
                   <div 
-                    className="h-28 flex items-center justify-center text-5xl relative" 
+                    className="h-32 flex items-center justify-center text-6xl relative" 
                     style={{ background: `linear-gradient(135deg, ${j.gradientFrom}, ${j.gradientTo})` }}
                   >
-                    <div className="drop-shadow-lg">{j.emoji}</div>
-                    <div className="absolute bottom-3 right-3 bg-black/40 backdrop-blur-md px-2 py-1 text-xs text-white rounded-lg font-mono font-bold border border-white/10 shadow-xl">
+                    <div className="drop-shadow-xl transform group-hover:scale-110 transition-transform duration-300">{j.emoji}</div>
+                    <div className="absolute bottom-4 right-4 bg-background/90 backdrop-blur-md px-3 py-1.5 text-xs text-foreground rounded-full font-bold shadow-sm">
                       {j.miles.toFixed(1)} / {j.totalMiles.toFixed(0)} mi
                     </div>
                   </div>
-                  <div className="p-4">
-                    <div className="flex justify-between items-start mb-1">
-                      <h3 className="font-bold text-lg leading-tight">{j.name}</h3>
-                      {j.completed && <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-md font-bold uppercase">Done</span>}
+                  <div className="p-6">
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="font-bold text-lg leading-tight text-foreground">{j.name}</h3>
+                      {j.completed && <span className="text-[10px] bg-green-100 text-green-700 px-2 py-1 rounded-md font-bold uppercase tracking-widest">Done</span>}
                     </div>
-                    <p className="text-sm font-medium text-muted-foreground mb-4">{j.teamName}</p>
-                    <p className="text-xs text-muted-foreground mb-3">Goal date: <span className="font-mono">{j.endDate.split("T")[0]}</span></p>
+                    <p className="text-sm font-medium text-muted-foreground mb-5">{j.teamName}</p>
                     
-                    <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                    <div className="h-3 bg-secondary rounded-full overflow-hidden relative">
                       <div 
-                        className="h-full bg-primary rounded-full transition-all duration-1000" 
+                        className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-1000 ease-out" 
                         style={{ width: `${Math.min(jProgress, 100)}%` }} 
                       />
                     </div>
+                    <p className="text-xs text-muted-foreground mt-3 font-medium">Goal date: <span className="text-foreground">{j.endDate.split("T")[0]}</span></p>
                   </div>
                 </div>
               </Link>
@@ -164,7 +163,7 @@ export default function Home() {
           })}
           
           {journeys.length === 0 && (
-            <div className="text-center p-8 bg-secondary/50 rounded-2xl border border-dashed border-border">
+            <div className="text-center p-10 bg-secondary/30 rounded-[2rem] border border-dashed border-border">
               <p className="text-muted-foreground font-medium">No active maps found.</p>
             </div>
           )}

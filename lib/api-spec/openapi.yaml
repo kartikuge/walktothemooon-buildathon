@@ -139,6 +139,26 @@ paths:
           content:
             application/json:
               schema: {$ref: "#/components/schemas/TeamReceipt"}
+  /moon/teams/{teamId}/maps/{mapId}/leaderboard:
+    get:
+      operationId: getTeamMapLeaderboard
+      description: Current members only. Actual assigned runs only, without date filtering. Miles descending, ties by ascending user ID; ranks are sequential. Disabled teams return an empty members array. Uses the existing selected-runner membership model, not account authentication.
+      parameters:
+        - {name: teamId, in: path, required: true, schema: {type: integer, minimum: 1}}
+        - {name: mapId, in: path, required: true, schema: {type: integer, minimum: 1}}
+        - {name: userId, in: query, required: true, schema: {type: integer, minimum: 1}}
+      responses:
+        "200":
+          description: Challenge-specific rankings, or no rankings when disabled
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/TeamMapLeaderboard"}
+        "400":
+          description: Invalid runner, team or map ID
+        "403":
+          description: Selected runner is not a current member
+        "404":
+          description: Map does not belong to this team
   /moon/teams/join:
     post:
       operationId: joinTeam
@@ -338,6 +358,7 @@ components:
       properties:
         userId: {type: integer, minimum: 1}
         name: {type: string, minLength: 1, maxLength: 80}
+        leaderboardEnabled: {type: boolean, default: false}
         routeId: {type: integer, minimum: 1}
         endDate: {type: string}
         today: {type: string}
@@ -349,13 +370,33 @@ components:
         inviteCode: {type: string, minLength: 6, maxLength: 6}
     TeamReceipt:
       type: object
-      required: [id, name, inviteCode, routeId, endDate]
+      required: [id, name, inviteCode, routeId, endDate, leaderboardEnabled]
       properties:
+        leaderboardEnabled: {type: boolean}
         id: {type: integer}
         name: {type: string}
         inviteCode: {type: string}
         routeId: {type: integer}
         endDate: {type: string}
+    TeamMapLeaderboard:
+      type: object
+      required: [teamId, mapId, leaderboardEnabled, members]
+      properties:
+        teamId: {type: integer}
+        mapId: {type: integer}
+        leaderboardEnabled: {type: boolean}
+        members:
+          type: array
+          items: {$ref: "#/components/schemas/LeaderboardMember"}
+    LeaderboardMember:
+      type: object
+      required: [rank, userId, name, avatarEmoji, miles]
+      properties:
+        rank: {type: integer}
+        userId: {type: integer}
+        name: {type: string}
+        avatarEmoji: {type: string}
+        miles: {type: number}
     User:
       type: object
       required: [id, name, avatarEmoji, restDays]

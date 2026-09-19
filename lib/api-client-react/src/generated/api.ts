@@ -26,6 +26,7 @@ import type {
   EstimateInput,
   GetMoonStateParams,
   GetRunnerProfileParams,
+  GetTeamMapLeaderboardParams,
   HealthStatus,
   JoinInput,
   Journey,
@@ -40,6 +41,7 @@ import type {
   RunnerProfile,
   SearchPlacesParams,
   TeamInput,
+  TeamMapLeaderboard,
   TeamReceipt
 } from './api.schemas';
 
@@ -793,6 +795,97 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       > => {
       return useMutation(getCreateTeamMutationOptions(options));
     }
+
+export const getGetTeamMapLeaderboardUrl = (teamId: number,
+    mapId: number,
+    params: GetTeamMapLeaderboardParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/moon/teams/${teamId}/maps/${mapId}/leaderboard?${stringifiedParams}` : `/api/moon/teams/${teamId}/maps/${mapId}/leaderboard`
+}
+
+/**
+ * Current members only. Actual assigned runs only, without date filtering. Miles descending, ties by ascending user ID; ranks are sequential. Disabled teams return an empty members array. Uses the existing selected-runner membership model, not account authentication.
+ */
+export const getTeamMapLeaderboard = async (teamId: number,
+    mapId: number,
+    params: GetTeamMapLeaderboardParams, options?: Parameters<typeof customFetch>[1]): Promise<TeamMapLeaderboard> => {
+
+  return customFetch<TeamMapLeaderboard>(getGetTeamMapLeaderboardUrl(teamId,mapId,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetTeamMapLeaderboardQueryKey = (teamId: number,
+    mapId: number,
+    params?: GetTeamMapLeaderboardParams,) => {
+    return [
+    `/api/moon/teams/${teamId}/maps/${mapId}/leaderboard`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetTeamMapLeaderboardQueryOptions = <TData = Awaited<ReturnType<typeof getTeamMapLeaderboard>>, TError = ErrorType<void>>(teamId: number,
+    mapId: number,
+    params: GetTeamMapLeaderboardParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTeamMapLeaderboard>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetTeamMapLeaderboardQueryKey(teamId,mapId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTeamMapLeaderboard>>> = ({ signal }) => getTeamMapLeaderboard(teamId,mapId,params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: teamId !== null && teamId !== undefined && mapId !== null && mapId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getTeamMapLeaderboard>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetTeamMapLeaderboardQueryResult = NonNullable<Awaited<ReturnType<typeof getTeamMapLeaderboard>>>
+export type GetTeamMapLeaderboardQueryError = ErrorType<void>
+
+
+
+export function useGetTeamMapLeaderboard<TData = Awaited<ReturnType<typeof getTeamMapLeaderboard>>, TError = ErrorType<void>>(
+ teamId: number,
+    mapId: number,
+    params: GetTeamMapLeaderboardParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTeamMapLeaderboard>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetTeamMapLeaderboardQueryOptions(teamId,mapId,params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getJoinTeamUrl = () => {
 

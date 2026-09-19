@@ -61,3 +61,13 @@ supersede the earlier "do not build today" restrictions on maps/custom routes:
   routing and standard OpenStreetMap tiles are usage-limited public services.
   Preserve attribution and caching; use suitable production providers before
   expanding beyond their allowed usage.
+
+## Approved visual redesign and optional team rankings
+The screenshot-inspired redesign supersedes the earlier blanket restriction on
+individual rankings only for teams that enable a leaderboard when created.
+Existing teams and omitted settings remain disabled; there is no settings editor.
+Rankings show miles assigned to that specific team's specific Map, not global
+competition scores, and do not alter shared progress, quotas, or completion.
+The global To the Moon tracker remains the prominent top-of-Home product hook.
+Preserve all existing workflows and do not add unsupported screenshot features.
+Do not publish automatically. See `ORIGINAL-APP.md` for baseline and switching.
