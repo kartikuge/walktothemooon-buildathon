@@ -1,2 +1,3 @@
 - [Routing response formats](routing-response-formats.md) — Valhalla’s default JSON response ignores GeoJSON shape requests; geometry decoding depends on output format.
 - [Runner selection initialization](runner-selection.md) — never render cached default-runner data before resolving the saved demo runner.
+- [Source-package test execution](source-package-tests.md) — bundle tests that import workspace source packages before running Node’s test runner.

@@ -4,6 +4,7 @@ import { pool } from "@workspace/db";
 import { AddMapBody, AddMapResponse, PreviewMapBody, PreviewMapResponse, SearchPlacesQueryParams, SearchPlacesResponse, SaveActivityProfileBody, GetActivityProfileResponse, EstimateMapBody, EstimateMapResponse } from "@workspace/api-zod";
 import { searchCities, resolveCity, buildGeoPreview } from "../lib/geo";
 import { activityWeek, calculateEffort } from "../lib/effort";
+import { parseActivityProfile } from "../lib/activity-validation";
 import { moonState } from "./moon";
 
 const router=Router();
@@ -74,10 +75,7 @@ router.get("/moon/activity/:userId",async(req,res)=>{
 });
 router.put("/moon/activity/:userId",async(req,res)=>{
   const id=Number(req.params.userId);await requireUser(id);
-  const parsed=SaveActivityProfileBody.safeParse(req.body);
-  if(!parsed.success)throw fail(400,"Enter valid activity miles and days.");
-  const v=parsed.data,unique=(days:number[])=>new Set(days).size===days.length;
-  if(!unique(v.restDays)||!unique(v.commuteDays)||v.sessions.some(s=>!unique(s.days))||new Set(v.sessions.map(s=>s.id)).size!==v.sessions.length)throw fail(400,"Activity days and session IDs must be unique.");
+  const v=parseActivityProfile(req.body);
   if(v.homeCity) v.homeCity=await resolveCity(v.homeCity.id);
   const c=await pool.connect();
   try {
