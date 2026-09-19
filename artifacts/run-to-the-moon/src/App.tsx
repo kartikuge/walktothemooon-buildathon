@@ -15,6 +15,7 @@ import Planner from '@/pages/planner';
 import Stats from '@/pages/stats';
 import Activity from '@/pages/activity';
 import AddMap from '@/pages/add-map';
+import Profile from '@/pages/profile';
 import { Layout } from '@/components/layout';
 
 import {
@@ -34,6 +35,7 @@ function Router() {
           <Route path="/" component={Home} />
           <Route path="/journey/:id" component={JourneyDetail} />
           <Route path="/maps/add" component={AddMap} />
+          <Route path="/profile" component={Profile} />
           <Route path="/log" component={LogRun} />
           <Route path="/completion" component={Completion} />
           <Route path="/passport" component={Passport} />

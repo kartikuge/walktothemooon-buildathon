@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react";
-import { useLocation } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useUser } from "@/hooks/use-user";
 import { 
   useGetRunnerProfile, 
+  useGetMoonState,
   useSearchPlaces, 
   usePreviewMap, 
   useAddMap, 
@@ -23,14 +24,12 @@ import { InteractiveMap } from "@/components/interactive-map";
 import { EffortCalculator } from "@/components/effort-calculator";
 import { useQueryClient } from "@tanstack/react-query";
 import { MapPin, Search, Loader2, Plus } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 
 export default function AddMap() {
   const { userId } = useUser();
   const today = formatDate(new Date());
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
-  const { toast } = useToast();
 
   const { data: profile, isLoading: isLoadingProfile, error: profileError, refetch: reloadProfile } = useGetRunnerProfile(
     { userId, today },
@@ -38,6 +37,7 @@ export default function AddMap() {
   );
 
   const { data: activityProfile } = useGetActivityProfile(userId);
+  const { data: state, refetch: reloadMaps } = useGetMoonState({userId,today});
 
   const [tab, setTab] = useState<"preset" | "custom">("preset");
   
@@ -60,6 +60,18 @@ export default function AddMap() {
   // Common State
   const [teamId, setTeamId] = useState<string>("solo");
   const [endDate, setEndDate] = useState<string>("");
+  const [saveError, setSaveError] = useState("");
+  const existingMap = state?.journeys.find(j =>
+    (j.teamId ?? null) === (teamId === "solo" ? null : Number(teamId)) &&
+    (tab === "preset" ? j.routeId === presetRoute?.id :
+      !!previewData && j.geometry?.mode === previewData.geometry.mode &&
+      j.geometry?.origin?.id === previewData.geometry.origin?.id &&
+      j.geometry?.destination?.id === previewData.geometry.destination?.id));
+  const missingStep = tab === "preset" && !presetRoute ? "Choose a Map above."
+    : tab === "custom" && !previewData ? "Select two cities and generate a preview first."
+    : !endDate ? "Choose a goal date."
+    : endDate < today ? "Choose a goal date on or after today." : "";
+  useEffect(() => { setSaveError(""); }, [teamId,endDate,presetRoute,previewData,tab]);
 
   // Search queries
   const { data: originResults, isFetching: isOriginSearching, error: originError, refetch: retryOrigin } = useSearchPlaces(
@@ -129,10 +141,13 @@ export default function AddMap() {
   };
 
   const handleAddMap = () => {
+    if (isAdding || existingMap) return;
+    if (missingStep) { setSaveError(missingStep); return; }
     if (!endDate || endDate < today) {
-      toast({ title: "Please select a goal date on or after today", variant: "destructive" });
+      setSaveError("Please select a goal date on or after today");
       return;
     }
+    setSaveError("");
 
     const payload = {
       userId,
@@ -157,7 +172,10 @@ export default function AddMap() {
           queryClient.invalidateQueries({ queryKey: getGetRunnerProfileQueryKey() });
           setLocation(`/journey/${journey.id}`);
         },
-        onError: (err: any) => toast({ title: "Could not add Map", description: err?.data?.error || err.message, variant: "destructive" })
+        onError: (err: any) => {
+          setSaveError(err?.data?.error || err.message || "Could not add this Map. Please try again.");
+          reloadMaps();
+        }
       }
     );
   };
@@ -197,7 +215,9 @@ export default function AddMap() {
               {profile.routes.map(r => (
                 <button
                   key={r.id}
-                  onClick={() => setPresetRoute(r)}
+                   type="button"
+                   aria-pressed={presetRoute?.id === r.id}
+                   onClick={() => setPresetRoute(r)}
                   className={`text-left p-4 rounded-2xl border transition-all ${presetRoute?.id === r.id ? 'border-primary bg-primary/5 ring-2 ring-primary/20' : 'border-border bg-card hover:bg-secondary/50'}`}
                 >
                   <div className="flex items-center justify-between">
@@ -215,9 +235,10 @@ export default function AddMap() {
         <TabsContent value="custom" className="space-y-6 animate-in fade-in">
           <div className="bg-card border border-border p-5 rounded-3xl shadow-sm space-y-5">
             <div className="space-y-2">
-              <Label className="text-xs uppercase tracking-wider text-muted-foreground">Origin City</Label>
+              <Label htmlFor="origin-city" className="text-xs uppercase tracking-wider text-muted-foreground">Origin City</Label>
               <form onSubmit={handleSearchOrigin} className="flex gap-2">
                 <Input 
+                  id="origin-city"
                   value={originQuery}
                   onChange={e => {
                     setOriginQuery(e.target.value);
@@ -226,7 +247,7 @@ export default function AddMap() {
                   className="rounded-xl bg-background"
                   placeholder="e.g. London"
                 />
-                <Button type="submit" variant="secondary" className="rounded-xl px-3 shrink-0">
+                <Button aria-label="Search origin city" type="submit" variant="secondary" className="rounded-xl px-3 shrink-0">
                   <Search size={18} />
                 </Button>
               </form>
@@ -254,9 +275,10 @@ export default function AddMap() {
             </div>
 
             <div className="space-y-2">
-              <Label className="text-xs uppercase tracking-wider text-muted-foreground">Destination City</Label>
+              <Label htmlFor="destination-city" className="text-xs uppercase tracking-wider text-muted-foreground">Destination City</Label>
               <form onSubmit={handleSearchDest} className="flex gap-2">
                 <Input 
+                  id="destination-city"
                   value={destQuery}
                   onChange={e => {
                     setDestQuery(e.target.value);
@@ -265,7 +287,7 @@ export default function AddMap() {
                   className="rounded-xl bg-background"
                   placeholder="e.g. Paris"
                 />
-                <Button type="submit" variant="secondary" className="rounded-xl px-3 shrink-0">
+                <Button aria-label="Search destination city" type="submit" variant="secondary" className="rounded-xl px-3 shrink-0">
                   <Search size={18} />
                 </Button>
               </form>
@@ -326,6 +348,35 @@ export default function AddMap() {
         </TabsContent>
       </Tabs>
 
+      <section aria-labelledby="map-setup-title" className="mt-6 bg-card border border-border p-5 rounded-3xl shadow-sm space-y-4">
+        <h2 id="map-setup-title" className="text-lg font-bold">Set up your Map</h2>
+        <div className="space-y-2">
+          <Label htmlFor="map-participants">Who is taking part?</Label>
+          <select id="map-participants" value={teamId} onChange={e => setTeamId(e.target.value)}
+            disabled={isAdding} className="h-12 w-full rounded-xl border border-border bg-background px-3 text-sm">
+            <option value="solo">Solo Journey</option>
+            {profile.teams.map(t => <option key={t.id} value={String(t.id)}>Team: {t.name}</option>)}
+          </select>
+          {!profile.teams.length && <p className="text-xs text-muted-foreground">Want to take part together? <Link href="/teams" className="underline">Create or join a team</Link>.</p>}
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="map-goal-date">Goal date (required)</Label>
+          <Input id="map-goal-date" type="date" min={today} value={endDate} onChange={e => setEndDate(e.target.value)} disabled={isAdding} className="h-12 rounded-xl" />
+        </div>
+        {existingMap && <div role="status" className="rounded-xl bg-secondary p-3 text-sm space-y-2">
+          <p>This Map is already {existingMap.completed ? "completed" : "enrolled"} for {teamId === "solo" ? "you" : "this team"}. Your miles stay unchanged.</p>
+          <Link href={`/journey/${existingMap.id}`} className="block underline font-bold text-primary">Open existing Map</Link>
+          <p>Choose another Map or a different participation option to start something new.</p>
+        </div>}
+        {saveError && <p role="alert" className="rounded-xl bg-secondary p-3 text-sm">{saveError} You can adjust your choices and try again.</p>}
+        <Button onClick={handleAddMap} disabled={isAdding || !!missingStep || !!existingMap}
+          aria-describedby="map-save-help" className="w-full h-14 text-lg rounded-2xl">
+          {isAdding ? <Loader2 className="animate-spin mr-2" /> : <Plus className="mr-2" />}
+          {isAdding ? "Adding Map…" : "Start Map"}
+        </Button>
+        <p id="map-save-help" className="text-sm text-muted-foreground">{missingStep || (existingMap ? "Open your existing Map above, or change your selection." : "Ready to start. Previewing the map and calculating effort below are optional for preset Maps.")}</p>
+      </section>
+
       {((tab === "preset" && presetRoute) || (tab === "custom" && previewData)) && (
         <div className="mt-8 space-y-6 animate-in slide-in-from-bottom-4">
           <div className="bg-card border border-border rounded-3xl p-2 shadow-sm">
@@ -339,6 +390,8 @@ export default function AddMap() {
             )}
           </div>
 
+          <details className="rounded-2xl border border-border">
+            <summary className="p-4 cursor-pointer font-bold">Optional: estimate the effort</summary>
           <EffortCalculator 
             userId={userId}
             teamId={teamId === "solo" ? null : Number(teamId)}
@@ -348,30 +401,7 @@ export default function AddMap() {
             onEndDateChange={setEndDate}
           />
 
-          <div className="bg-card border border-border p-5 rounded-3xl shadow-sm space-y-4">
-            <div className="space-y-2">
-              <Label className="text-xs uppercase tracking-wider text-muted-foreground">Join as</Label>
-              <select
-                value={teamId}
-                onChange={e => setTeamId(e.target.value)}
-                className="flex h-12 w-full rounded-xl border border-border bg-background px-4 py-2 text-sm font-bold ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring appearance-none"
-              >
-                <option value="solo">Solo Journey</option>
-                {profile.teams.map(t => (
-                  <option key={t.id} value={String(t.id)}>Team: {t.name}</option>
-                ))}
-              </select>
-            </div>
-
-            <Button 
-              onClick={handleAddMap}
-              disabled={isAdding || !endDate || (tab === "custom" && !previewData)}
-              className="w-full h-14 text-lg rounded-2xl mt-2"
-            >
-              {isAdding ? <Loader2 className="animate-spin mr-2" /> : <Plus className="mr-2" />}
-              Start Map
-            </Button>
-          </div>
+          </details>
         </div>
       )}
     </div>

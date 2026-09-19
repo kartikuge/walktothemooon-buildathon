@@ -1,1 +1,2 @@
 - [Routing response formats](routing-response-formats.md) — Valhalla’s default JSON response ignores GeoJSON shape requests; geometry decoding depends on output format.
+- [Runner selection initialization](runner-selection.md) — never render cached default-runner data before resolving the saved demo runner.

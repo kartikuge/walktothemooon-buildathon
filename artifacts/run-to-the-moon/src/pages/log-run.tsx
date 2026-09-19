@@ -30,13 +30,10 @@ export default function LogRun() {
   const [journeyId, setJourneyId] = useState("");
   const [simulating, setSimulating] = useState(false);
 
-  // Set default journey once data loads
-  if (moonState && !journeyId) {
-    const defaultJourney = moonState.journeys.find(j => j.teamName === "Steel City Striders") || moonState.journeys[0];
-    if (defaultJourney) {
-      setJourneyId(defaultJourney.id);
-    }
-  }
+  // Resolve both the displayed option and submitted IDs from the current runner's Maps.
+  const selectedJourney = moonState?.journeys.find(j => j.id === journeyId)
+    ?? moonState?.journeys.find(j => j.teamName === "Steel City Striders")
+    ?? moonState?.journeys[0];
 
   const handleSimulate = () => {
     setSimulating(true);
@@ -49,16 +46,15 @@ export default function LogRun() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!miles || !duration || !journeyId || !loggedAt) return;
-
-    const journey = moonState?.journeys.find(j => j.id === journeyId);
+    if (!miles || !duration || !selectedJourney || !loggedAt) return;
+    const journey = selectedJourney;
 
     logRun({
       data: {
         userId,
-        mapId: journey?.mapId,
-        routeId: journey?.routeId || 0,
-        teamId: journey?.teamId || null,
+        mapId: journey.mapId,
+        routeId: journey.routeId,
+        teamId: journey.teamId ?? null,
         miles: Number(miles),
         durationMinutes: Number(duration),
         loggedAt,
@@ -170,7 +166,7 @@ export default function LogRun() {
               id="journey"
               className="flex h-14 w-full rounded-2xl border border-border bg-card px-4 py-2 text-base font-bold ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring appearance-none pr-10"
               style={{ backgroundImage: 'url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%231a202c%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem top 50%', backgroundSize: '0.65rem auto' }}
-              value={journeyId}
+              value={selectedJourney?.id ?? ""}
               onChange={(e) => setJourneyId(e.target.value)}
               required
             >
@@ -185,7 +181,7 @@ export default function LogRun() {
 
         <Button 
           type="submit" 
-          disabled={isPending}
+          disabled={isPending || !selectedJourney}
           className="w-full h-14 text-lg rounded-2xl mt-4"
         >
           {isPending ? <Loader2 className="animate-spin mr-2" /> : null}

@@ -83,7 +83,7 @@ export default function Stats() {
           <CardContent className="relative z-10">
             <div className="text-6xl font-black font-mono text-accent drop-shadow-sm">{profile.currentStreak} <span className="text-2xl font-bold font-sans text-foreground">days</span></div>
             <p className="text-sm text-muted-foreground mt-3 font-medium">
-              Keep it up! Your rest days don't break the streak.
+              Consecutive calendar logged days. Today can still be logged!
             </p>
           </CardContent>
         </Card>

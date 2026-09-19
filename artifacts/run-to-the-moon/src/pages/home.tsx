@@ -1,7 +1,9 @@
 import { Link } from "wouter";
 import { useUser } from "@/hooks/use-user";
-import { useGetMoonState, getGetMoonStateQueryKey } from "@workspace/api-client-react";
+import { useGetMoonState, getGetMoonStateQueryKey, useGetRunnerProfile, getGetRunnerProfileQueryKey } from "@workspace/api-client-react";
 import { formatDate } from "@/lib/utils";
+import { Flame, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function Home() {
   const { userId } = useUser();
@@ -10,6 +12,11 @@ export default function Home() {
   const { data: moonState, isLoading } = useGetMoonState(
     { userId, today },
     { query: { queryKey: getGetMoonStateQueryKey({ userId, today }), refetchInterval: 10000 } }
+  );
+
+  const { data: profile, isLoading: isProfileLoading, isError: isProfileError, refetch: refetchProfile } = useGetRunnerProfile(
+    { userId, today },
+    { query: { queryKey: getGetRunnerProfileQueryKey({ userId, today }), refetchInterval: 10000 } }
   );
 
   if (isLoading || !moonState) {
@@ -74,6 +81,44 @@ export default function Home() {
             </div>
           )}
         </div>
+      </div>
+
+      <div className="px-5 mt-6">
+        {isProfileLoading ? (
+          <div className="h-24 bg-secondary rounded-2xl animate-pulse flex items-center justify-center text-muted-foreground font-mono text-sm">
+            Loading streak...
+          </div>
+        ) : isProfileError || !profile ? (
+          <div className="h-24 bg-card border border-destructive/20 rounded-2xl flex flex-col items-center justify-center gap-2 shadow-sm">
+            <span className="text-destructive font-mono text-xs">Failed to load streak</span>
+            <Button size="sm" variant="outline" onClick={() => refetchProfile()} className="h-7 text-xs">
+              <RefreshCw size={12} className="mr-1" /> Retry
+            </Button>
+          </div>
+        ) : profile.currentStreak === 0 ? (
+          <div className="bg-gradient-to-r from-secondary to-secondary/50 border border-border p-5 rounded-2xl shadow-sm flex items-center gap-4">
+            <div className="p-3 bg-background rounded-full opacity-50 grayscale shadow-sm">
+              <Flame size={24} />
+            </div>
+            <div>
+              <h3 className="font-bold text-lg leading-tight text-foreground">Start a Streak!</h3>
+              <p className="text-sm font-medium text-muted-foreground">Log a run today to begin.</p>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-gradient-to-r from-accent/20 to-card border border-accent/30 p-5 rounded-2xl shadow-sm flex items-center gap-4">
+            <div className="p-3 bg-accent/20 text-accent rounded-full animate-pulse shadow-[0_0_15px_rgba(var(--accent),0.3)]">
+              <Flame size={24} />
+            </div>
+            <div>
+              <div className="text-xs font-bold text-accent uppercase tracking-wider mb-0.5">Current Streak</div>
+              <div className="flex items-baseline gap-1">
+                <span className="text-3xl font-mono font-black text-foreground">{profile.currentStreak}</span>
+                <span className="font-medium text-muted-foreground">days</span>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="px-5 mt-10 mb-8">

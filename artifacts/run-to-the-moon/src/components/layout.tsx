@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import { useUser } from "@/hooks/use-user";
 import { useGetMoonState, getGetMoonStateQueryKey } from "@workspace/api-client-react";
 import { formatDate } from "@/lib/utils";
-import { Trophy, Compass, Plus, Stamp as StampIcon, Menu, X } from "lucide-react";
+import { Trophy, Compass, Plus, Menu, X, User, Map } from "lucide-react";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const { userId, switchUser } = useUser();
@@ -50,11 +50,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <>
                 <div className="fixed inset-0 z-40 bg-background/50 backdrop-blur-sm" onClick={() => setMenuOpen(false)} />
                 <div className="absolute top-14 right-4 bg-card border border-border shadow-2xl rounded-2xl p-2 flex flex-col gap-1 z-50 animate-in slide-in-from-top-4 fade-in duration-200 min-w-[180px]">
-                  <Link href="/maps/add" onClick={() => setMenuOpen(false)} className="px-4 py-3 font-bold font-mono text-sm uppercase hover:bg-secondary rounded-xl transition-colors flex items-center">Add a Map</Link>
                   <Link href="/teams" onClick={() => setMenuOpen(false)} className="px-4 py-3 font-bold font-mono text-sm uppercase hover:bg-secondary rounded-xl transition-colors flex items-center">My Teams</Link>
-                  <Link href="/activity" onClick={() => setMenuOpen(false)} className="px-4 py-3 font-bold font-mono text-sm uppercase hover:bg-secondary rounded-xl transition-colors flex items-center">Activity Profile</Link>
                   <Link href="/planner" onClick={() => setMenuOpen(false)} className="px-4 py-3 font-bold font-mono text-sm uppercase hover:bg-secondary rounded-xl transition-colors flex items-center">Route Planner</Link>
-                  <Link href="/stats" onClick={() => setMenuOpen(false)} className="px-4 py-3 font-bold font-mono text-sm uppercase hover:bg-secondary rounded-xl transition-colors flex items-center">My Stats</Link>
                 </div>
               </>
             )}
@@ -67,23 +64,27 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </main>
 
       <nav className="fixed bottom-0 w-full max-w-md bg-background border-t border-border flex items-center justify-around py-3 pb-6 z-50">
-        <Link href="/" className={`flex flex-col items-center gap-1 ${location === '/' ? 'text-primary' : 'text-muted-foreground'}`}>
+        <Link href="/" className={`flex flex-col items-center justify-center min-w-[44px] min-h-[44px] gap-1 ${location === '/' ? 'text-primary' : 'text-muted-foreground'}`} aria-current={location === '/' ? 'page' : undefined}>
           <Compass size={24} />
           <span className="text-[10px] font-bold uppercase tracking-wider">Home</span>
         </Link>
-        <Link href="/competition" className={`flex flex-col items-center gap-1 ${location === '/competition' ? 'text-primary' : 'text-muted-foreground'}`}>
+        <Link href="/competition" className={`flex flex-col items-center justify-center min-w-[44px] min-h-[44px] gap-1 ${location === '/competition' ? 'text-primary' : 'text-muted-foreground'}`} aria-current={location === '/competition' ? 'page' : undefined}>
           <Trophy size={24} />
           <span className="text-[10px] font-bold uppercase tracking-wider">Compete</span>
         </Link>
-        <Link href="/log" className={`flex flex-col items-center gap-1 ${location === '/log' ? 'text-primary' : 'text-muted-foreground'}`}>
+        <Link href="/log" className={`flex flex-col items-center justify-center min-w-[44px] min-h-[44px] gap-1 ${location === '/log' ? 'text-primary' : 'text-muted-foreground'}`} aria-current={location === '/log' ? 'page' : undefined}>
           <div className="bg-primary text-primary-foreground p-3 rounded-full -mt-8 shadow-lg shadow-primary/30 border-4 border-background active:scale-95 transition-transform">
             <Plus size={24} strokeWidth={3} />
           </div>
           <span className="text-[10px] font-bold uppercase tracking-wider mt-1">Log Run</span>
         </Link>
-        <Link href="/passport" className={`flex flex-col items-center gap-1 ${location === '/passport' ? 'text-primary' : 'text-muted-foreground'}`}>
-          <StampIcon size={24} />
-          <span className="text-[10px] font-bold uppercase tracking-wider">Passport</span>
+        <Link href="/maps/add" className={`flex flex-col items-center justify-center min-w-[44px] min-h-[44px] gap-1 ${location === '/maps/add' ? 'text-primary' : 'text-muted-foreground'}`} aria-current={location === '/maps/add' ? 'page' : undefined}>
+          <Map size={24} />
+          <span className="text-[10px] font-bold uppercase tracking-wider">Add Map</span>
+        </Link>
+        <Link href="/profile" className={`flex flex-col items-center justify-center min-w-[44px] min-h-[44px] gap-1 ${['/profile', '/passport', '/activity', '/stats'].includes(location) ? 'text-primary' : 'text-muted-foreground'}`} aria-current={['/profile', '/passport', '/activity', '/stats'].includes(location) ? 'page' : undefined}>
+          <User size={24} />
+          <span className="text-[10px] font-bold uppercase tracking-wider">Profile</span>
         </Link>
       </nav>
     </div>
