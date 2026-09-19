@@ -7,6 +7,16 @@ import { teamMapLeaderboard } from "../lib/team-leaderboard";
 const router = Router();
 const dayValid = (s: string) => /^\d{4}-\d{2}-\d{2}$/.test(s) && Number.isFinite(Date.parse(s)) && new Date(s).toISOString().slice(0,10) === s;
 const receiptColumns = `id,name,invite_code AS "inviteCode",route_id AS "routeId",end_date::text AS "endDate",leaderboard_enabled AS "leaderboardEnabled"`;
+const legacyReceiptColumns = `id,name,invite_code AS "inviteCode",route_id AS "routeId",end_date::text AS "endDate",false AS "leaderboardEnabled"`;
+let leaderboardColumnSupported: Promise<boolean> | undefined;
+
+function supportsLeaderboardColumn() {
+  leaderboardColumnSupported ??= pool.query(`SELECT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema=current_schema() AND table_name='moon_teams' AND column_name='leaderboard_enabled'
+  ) AS supported`).then(result => result.rows[0]?.supported === true);
+  return leaderboardColumnSupported;
+}
 
 router.get("/moon/teams/:teamId/maps/:mapId/leaderboard",async(req,res)=>{
   try {
@@ -24,10 +34,11 @@ router.get("/moon/profile", async (req,res) => {
   if(!Number.isInteger(userId)||!dayValid(today)) {res.status(400).json({error:"Choose a runner and valid local date."});return;}
   const user=(await pool.query("SELECT rest_days FROM moon_users WHERE id=$1",[userId])).rows[0];
   if(!user) {res.status(404).json({error:"Runner not found."});return;}
+  const teamReceiptColumns = await supportsLeaderboardColumn() ? receiptColumns : legacyReceiptColumns;
   const [routes,stamps,teams,totals,dates] = await Promise.all([
     pool.query(`SELECT id,name,type,total_miles::float8 AS "totalMiles",emoji,gradient_from AS "gradientFrom",gradient_to AS "gradientTo",geometry FROM moon_routes r WHERE is_preset OR EXISTS(SELECT 1 FROM moon_maps m WHERE m.route_id=r.id AND (m.solo_user_id=$1 OR m.team_id IN (SELECT team_id FROM moon_members WHERE user_id=$1))) ORDER BY id`,[userId]),
     pool.query(`SELECT s.route_id AS "routeId",r.name AS "routeName",r.emoji,s.earned_at::text AS "earnedAt",s.earned_with_team AS "earnedWithTeam" FROM moon_stamps s JOIN moon_routes r ON r.id=s.route_id WHERE user_id=$1 ORDER BY earned_at DESC`,[userId]),
-    pool.query(`SELECT ${receiptColumns} FROM moon_teams WHERE id IN (SELECT team_id FROM moon_members WHERE user_id=$1) ORDER BY id`,[userId]),
+    pool.query(`SELECT ${teamReceiptColumns} FROM moon_teams WHERE id IN (SELECT team_id FROM moon_members WHERE user_id=$1) ORDER BY id`,[userId]),
     pool.query(`SELECT COALESCE(SUM(miles),0)::float8 AS "totalMiles",COALESCE(SUM(duration_minutes),0)::float8 AS "totalMinutes",COALESCE(MAX(miles),0)::float8 AS "longestRun" FROM moon_runs WHERE user_id=$1`,[userId]),
     pool.query("SELECT DISTINCT logged_at::text AS day FROM moon_runs WHERE user_id=$1 AND logged_at<=$2 ORDER BY day DESC",[userId,today]),
   ]);
