@@ -244,10 +244,10 @@ export default function AddMap() {
                     setOriginQuery(e.target.value);
                     if (selectedOrigin) setSelectedOrigin(null);
                   }}
-                  className="rounded-xl bg-background"
+                  className="h-12 min-w-0 flex-1 rounded-xl bg-background"
                   placeholder="e.g. London"
                 />
-                <Button aria-label="Search origin city" type="submit" variant="secondary" className="rounded-xl px-3 shrink-0">
+                <Button aria-label="Search origin city" type="submit" variant="secondary" size="icon" className="h-12 w-12 rounded-xl shrink-0">
                   <Search size={18} />
                 </Button>
               </form>
@@ -284,10 +284,10 @@ export default function AddMap() {
                     setDestQuery(e.target.value);
                     if (selectedDest) setSelectedDest(null);
                   }}
-                  className="rounded-xl bg-background"
+                  className="h-12 min-w-0 flex-1 rounded-xl bg-background"
                   placeholder="e.g. Paris"
                 />
-                <Button aria-label="Search destination city" type="submit" variant="secondary" className="rounded-xl px-3 shrink-0">
+                <Button aria-label="Search destination city" type="submit" variant="secondary" size="icon" className="h-12 w-12 rounded-xl shrink-0">
                   <Search size={18} />
                 </Button>
               </form>
