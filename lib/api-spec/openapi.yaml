@@ -11,6 +11,32 @@ tags:
   - name: health
     description: Health operations
 paths:
+  /moon/state:
+    get:
+      operationId: getMoonState
+      parameters:
+        - {name: userId, in: query, required: true, schema: {type: integer}}
+        - {name: today, in: query, required: true, schema: {type: string}}
+      responses:
+        "200":
+          description: Running dashboard and competition
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/MoonState"}
+  /moon/runs:
+    post:
+      operationId: logRun
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/RunInput"}
+      responses:
+        "201":
+          description: Saved run and any newly earned stamp
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/RunResult"}
   /healthz:
     get:
       operationId: healthCheck
@@ -26,6 +52,85 @@ paths:
                 $ref: "#/components/schemas/HealthStatus"
 components:
   schemas:
+    User:
+      type: object
+      required: [id, name, avatarEmoji, restDays]
+      properties:
+        id: {type: integer}
+        name: {type: string}
+        avatarEmoji: {type: string}
+        restDays: {type: array, items: {type: integer}}
+    Journey:
+      type: object
+      required: [id, routeId, name, teamName, totalMiles, miles, remainingMiles, daysRemaining, dailyTarget, memberCount, topContributor, emoji, gradientFrom, gradientTo, endDate, completed, type]
+      properties:
+        id: {type: string}
+        routeId: {type: integer}
+        teamId: {type: [integer, "null"]}
+        name: {type: string}
+        teamName: {type: string}
+        totalMiles: {type: number}
+        miles: {type: number}
+        remainingMiles: {type: number}
+        daysRemaining: {type: integer}
+        dailyTarget: {type: number}
+        memberCount: {type: integer}
+        topContributor: {type: string}
+        emoji: {type: string}
+        gradientFrom: {type: string}
+        gradientTo: {type: string}
+        endDate: {type: string}
+        completed: {type: boolean}
+        type: {type: string}
+    Stamp:
+      type: object
+      required: [routeId, routeName, emoji, earnedAt, earnedWithTeam]
+      properties:
+        routeId: {type: integer}
+        routeName: {type: string}
+        emoji: {type: string}
+        earnedAt: {type: string}
+        earnedWithTeam: {type: boolean}
+    Competition:
+      type: object
+      required: [name, endDate, teams]
+      properties:
+        name: {type: string}
+        endDate: {type: string}
+        winnerTeamId: {type: [integer, "null"]}
+        teams: {type: array, items: {$ref: "#/components/schemas/Journey"}}
+    MoonState:
+      type: object
+      required: [users, moonMiles, moonGoal, journeys, dailyTarget, restDay, stamps, competition]
+      properties:
+        users: {type: array, items: {$ref: "#/components/schemas/User"}}
+        moonMiles: {type: number}
+        moonGoal: {type: number}
+        journeys: {type: array, items: {$ref: "#/components/schemas/Journey"}}
+        dailyTarget: {type: number}
+        restDay: {type: boolean}
+        stamps: {type: array, items: {$ref: "#/components/schemas/Stamp"}}
+        competition: {$ref: "#/components/schemas/Competition"}
+    RunInput:
+      type: object
+      required: [userId, routeId, teamId, miles, durationMinutes, loggedAt, requestId]
+      properties:
+        userId: {type: integer, minimum: 1}
+        routeId: {type: integer, minimum: 1}
+        teamId: {type: [integer, "null"]}
+        miles: {type: number, exclusiveMinimum: 0, maximum: 1000}
+        durationMinutes: {type: number, exclusiveMinimum: 0, maximum: 100000}
+        loggedAt: {type: string, pattern: '^\d{4}-\d{2}-\d{2}$'}
+        requestId: {type: string, minLength: 1, maxLength: 100}
+    RunResult:
+      type: object
+      required: [milesAdded, moonMiles, completed, routeName, emoji]
+      properties:
+        milesAdded: {type: number}
+        moonMiles: {type: number}
+        completed: {type: boolean}
+        routeName: {type: string}
+        emoji: {type: string}
     HealthStatus:
       type: object
       properties:

@@ -1,0 +1,113 @@
+Select: Web app. Then:
+
+STEP 1 — Create `replit.md` at the project root with exactly this content,
+confirm you've written it, and follow it for the entire session:
+
+---
+# Run to the Moon
+
+## What this is
+A mobile-first WEB app where teams pool running miles to travel long routes
+together. Buildathon submission, due in hours. Demo quality over completeness.
+
+## The hook
+Every mile any user logs, ever, adds to one global counter climbing toward
+239,000 miles — the distance to the Moon. This counter is the product's
+identity. It goes at the TOP of the home screen, not in a footer.
+
+## Deliberate scope choices (these are decisions, not limitations)
+- Web app, not Expo/React Native. Judges open a URL; they will not install
+  Expo Go. Mobile-first responsive at 390px, must not break on desktop.
+- NO Replit Auth, no login of any kind. A login wall between a judge and the
+  demo is a scoring risk, and I need to switch between seeded users mid-demo
+  to show team pooling. Use a name dropdown + localStorage + a persistent
+  user-switcher in the header.
+- No real map tiles. Landmark "scenes" are CSS gradients + emoji. A
+  half-loaded map tile looks broken on a phone; a designed scene doesn't.
+
+## Stack
+React + Node/Express + Replit Postgres. One app. All distances in MILES.
+All dates local timezone. Default rest days: Saturday and Sunday.
+
+## Do not build today
+Apple Watch / Garmin / HealthKit, passwords, payments, email, push
+notifications, custom route creation, individual member leaderboards.
+
+## Product rules that are non-negotiable design decisions
+- NEVER show "behind schedule" or any warning state. If a team is behind,
+  show the number and nothing else.
+- NEVER rank team members. One line only: "Top contributor: [name]".
+- All miles go into ONE shared team pool. No per-member debt or quota.
+
+## Priority — do not start P1 until every P0 works end to end
+P0: Home / Map detail / Log a run / Completion+stamp / Competition view
+P1: Passport / Goal planner / Create+join team / Lifetime stats
+P2 (only if genuinely ahead): react-leaflet + OSM tiles on map detail
+
+## The demo path that must never break
+Home -> log 9 miles -> Steel City Striders cross 300 mi -> stamp celebration
+showing "+9.0 mi to the Moon" -> Passport.
+Fix anything on this path before anything else.
+---
+
+STEP 2 — Build it.
+
+DATA MODEL
+- User: id, name, avatar_emoji, rest_days (default Sat+Sun)
+- Route: id, name, type (event|journey), total_miles, landmark_emoji,
+  gradient_from, gradient_to
+- Team: id, name, invite_code (6 chars), owner_user_id, route_id, end_date
+- TeamMember: team_id, user_id
+- Competition: id, route_id, name
+- CompetitionTeam: competition_id, team_id
+- RunLog: id, user_id, team_id (nullable = solo), miles, duration_minutes,
+  logged_at
+- Stamp: id, user_id, route_id, earned_at, earned_with_team (bool)
+
+SCREENS
+P0 Home — global Moon counter as the hero at the very top ("41,209 of
+239,000 mi to the Moon" with a thin progress bar). Below it: my target today
+in big type ("Run 4.2 mi today"), then a card per map I'm on with progress
+bar and miles remaining.
+
+P0 Map detail — landmark scene banner (gradient + emoji), progress bar of
+pooled team miles / route total, miles remaining, days remaining, my daily
+target, member count, and one line "Top contributor: [name]". No warnings,
+no member list.
+
+P0 Log a run — distance, duration, date (defaults today). Plus a "Simulate
+watch sync" button that fills the form with a plausible random run, labelled
+"Simulated (demo)". On submit miles enter the team's shared pool AND the
+global Moon counter.
+
+P0 Completion — when pooled miles >= route total, full-screen celebration:
+route name, stamp graphic, "Stamp added to your passport", and
+"+X mi to the Moon". Award the stamp to EVERY team member.
+
+P0 Competition — teams racing one route as stacked progress bars with miles.
+First to total wins. Show a winner state.
+
+P1 Passport — grid of stamp slots, earned filled, unearned greyed.
+P1 Goal planner — route + end date -> miles per active day (skipping rest
+days); OR daily distance -> finish date. Both directions.
+P1 Create/join team — create generates a 6-char code; join accepts one.
+P1 Lifetime stats — total miles, total time, longest run, maps completed,
+current streak.
+
+SEED DATA — the app must never be empty
+- Users: Kartik (default), Maneeth, Acyuth, Nihal, Priya, Dev, Sam, Ana, Raj
+- Routes: "Pittsburgh to Philadelphia" journey 300 mi; "Rome Marathon" event
+  26.2; "Great Wall Marathon" event 26.2; "Coast to Coast USA" journey 2800
+- Team "Steel City Striders" (Kartik, Maneeth, Acyuth, Nihal): 291.4 mi
+- Team "Liberty Bell Runners" (Priya, Dev, Sam, Ana, Raj): 288.7 mi
+- Competition: those two on Pittsburgh->Philadelphia, ends Dec 31
+- Kartik solo on Rome Marathon: 18.0 of 26.2
+- ~30 RunLogs across 8 weeks so lifetime stats are populated
+- Kartik already holds the Great Wall Marathon stamp
+- Global Moon counter seeded at 41,200 mi
+
+COPY TO SHOW VERBATIM on the map detail footer:
+"No shame mechanics. We don't tell you you're behind. Miss a day and a
+teammate covers it — every mile goes into one pool."
+
+Build P0 completely, then stop and tell me before starting P1.

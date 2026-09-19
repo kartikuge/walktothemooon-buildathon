@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Run to the Moon"
+description = "Mobile-first running teams pooling miles toward landmark routes and a shared journey to the Moon."
+version = "1.0.0"
+id = "artifacts/run-to-the-moon"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18263
+
+[services.development]
+run = "pnpm --filter @workspace/run-to-the-moon run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/run-to-the-moon", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/run-to-the-moon/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18263"
+BASE_PATH = "/"

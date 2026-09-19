@@ -1,45 +1,44 @@
-# [Project name]
+# Run to the Moon
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+## What this is
+A mobile-first WEB app where teams pool running miles to travel long routes
+together. Buildathon submission, due in hours. Demo quality over completeness.
 
-## Run & Operate
+## The hook
+Every mile any user logs, ever, adds to one global counter climbing toward
+239,000 miles — the distance to the Moon. This counter is the product's
+identity. It goes at the TOP of the home screen, not in a footer.
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
-- `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+## Deliberate scope choices (these are decisions, not limitations)
+- Web app, not Expo/React Native. Judges open a URL; they will not install
+  Expo Go. Mobile-first responsive at 390px, must not break on desktop.
+- NO Replit Auth, no login of any kind. A login wall between a judge and the
+  demo is a scoring risk, and I need to switch between seeded users mid-demo
+  to show team pooling. Use a name dropdown + localStorage + a persistent
+  user-switcher in the header.
+- No real map tiles. Landmark "scenes" are CSS gradients + emoji. A
+  half-loaded map tile looks broken on a phone; a designed scene doesn't.
 
 ## Stack
+React + Node/Express + Replit Postgres. One app. All distances in MILES.
+All dates local timezone. Default rest days: Saturday and Sunday.
 
-- pnpm workspaces, Node.js 24, TypeScript 5.9
-- API: Express 5
-- DB: PostgreSQL + Drizzle ORM
-- Validation: Zod (`zod/v4`), `drizzle-zod`
-- API codegen: Orval (from OpenAPI spec)
-- Build: esbuild (CJS bundle)
+## Do not build today
+Apple Watch / Garmin / HealthKit, passwords, payments, email, push
+notifications, custom route creation, individual member leaderboards.
 
-## Where things live
+## Product rules that are non-negotiable design decisions
+- NEVER show "behind schedule" or any warning state. If a team is behind,
+  show the number and nothing else.
+- NEVER rank team members. One line only: "Top contributor: [name]".
+- All miles go into ONE shared team pool. No per-member debt or quota.
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+## Priority — do not start P1 until every P0 works end to end
+P0: Home / Map detail / Log a run / Completion+stamp / Competition view
+P1: Passport / Goal planner / Create+join team / Lifetime stats
+P2 (only if genuinely ahead): react-leaflet + OSM tiles on map detail
 
-## Architecture decisions
-
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
-
-## Product
-
-_Describe the high-level user-facing capabilities of this app once they exist._
-
-## User preferences
-
-_Populate as you build — explicit user instructions worth remembering across sessions._
-
-## Gotchas
-
-_Populate as you build — sharp edges, "always run X before Y" rules._
-
-## Pointers
-
-- See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details
+## The demo path that must never break
+Home -> log 9 miles -> Steel City Striders cross 300 mi -> stamp celebration
+showing "+9.0 mi to the Moon" -> Passport.
+Fix anything on this path before anything else.
