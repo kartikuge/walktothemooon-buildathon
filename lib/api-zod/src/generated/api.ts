@@ -122,6 +122,70 @@ export const AddMapResponse = zod.object({
 })
 
 
+/**
+ * Solo owners or any current team member may edit the goal date. Progress is unchanged.
+ */
+export const UpdateMapGoalDateParams = zod.object({
+  "mapId": zod.coerce.number().int()
+})
+
+
+
+
+export const UpdateMapGoalDateBody = zod.object({
+  "userId": zod.number().int().min(1),
+  "endDate": zod.string(),
+  "today": zod.string()
+})
+
+export const updateMapGoalDateResponseGeometryCoordinatesItemMin = 2;
+export const updateMapGoalDateResponseGeometryCoordinatesItemMax = 2;
+
+
+
+export const UpdateMapGoalDateResponse = zod.object({
+  "mapId": zod.number().int().optional(),
+  "geometry": zod.object({
+  "mode": zod.enum(['virtual', 'walking', 'event', 'preset']),
+  "coordinates": zod.array(zod.array(zod.number()).min(updateMapGoalDateResponseGeometryCoordinatesItemMin).max(updateMapGoalDateResponseGeometryCoordinatesItemMax)).describe('Ordered latitude longitude pairs'),
+  "origin": zod.object({
+  "id": zod.number().int(),
+  "name": zod.string(),
+  "label": zod.string(),
+  "latitude": zod.number(),
+  "longitude": zod.number()
+}).optional(),
+  "destination": zod.object({
+  "id": zod.number().int(),
+  "name": zod.string(),
+  "label": zod.string(),
+  "latitude": zod.number(),
+  "longitude": zod.number()
+}).optional(),
+  "attribution": zod.string(),
+  "description": zod.string()
+}).optional(),
+  "id": zod.string(),
+  "routeId": zod.number().int(),
+  "teamId": zod.number().int().nullish(),
+  "name": zod.string(),
+  "teamName": zod.string(),
+  "totalMiles": zod.number(),
+  "miles": zod.number(),
+  "remainingMiles": zod.number(),
+  "daysRemaining": zod.number().int(),
+  "dailyTarget": zod.number(),
+  "memberCount": zod.number().int(),
+  "topContributor": zod.string(),
+  "emoji": zod.string(),
+  "gradientFrom": zod.string(),
+  "gradientTo": zod.string(),
+  "endDate": zod.string(),
+  "completed": zod.boolean(),
+  "type": zod.string()
+})
+
+
 export const GetActivityProfileParams = zod.object({
   "userId": zod.coerce.number().int()
 })

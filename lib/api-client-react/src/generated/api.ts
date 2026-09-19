@@ -30,6 +30,7 @@ import type {
   JoinInput,
   Journey,
   MapEstimate,
+  MapGoalDateInput,
   MapInput,
   MapPreview,
   MapPreviewInput,
@@ -309,6 +310,92 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getAddMapMutationOptions(options));
+    }
+
+export const getUpdateMapGoalDateUrl = (mapId: number,) => {
+
+
+
+
+  return `/api/moon/maps/${mapId}/goal-date`
+}
+
+/**
+ * Solo owners or any current team member may edit the goal date. Progress is unchanged.
+ */
+export const updateMapGoalDate = async (mapId: number,
+    mapGoalDateInput: MapGoalDateInput, options?: Parameters<typeof customFetch>[1]): Promise<Journey> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<Journey>(getUpdateMapGoalDateUrl(mapId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(mapGoalDateInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateMapGoalDateMutationKey = () => ['updateMapGoalDate'] as const;
+
+export const getUpdateMapGoalDateMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMapGoalDate>>, TError,UpdateMapGoalDateMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateMapGoalDate>>, TError,UpdateMapGoalDateMutationVariables, TContext> => {
+
+const mutationKey = getUpdateMapGoalDateMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateMapGoalDate>>, UpdateMapGoalDateMutationVariables> = (props) => {
+          const {mapId,data} = props ?? {};
+
+          return  updateMapGoalDate(mapId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateMapGoalDateMutationResult = NonNullable<Awaited<ReturnType<typeof updateMapGoalDate>>>
+    export type UpdateMapGoalDateMutationBody = BodyType<MapGoalDateInput>
+    export type UpdateMapGoalDateMutationError = ErrorType<void>
+    export type UpdateMapGoalDateMutationVariables = {mapId: number;data: BodyType<MapGoalDateInput>}
+
+    export const useUpdateMapGoalDate = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMapGoalDate>>, TError,UpdateMapGoalDateMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateMapGoalDate>>,
+        TError,
+        UpdateMapGoalDateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateMapGoalDateMutationOptions(options));
     }
 
 export const getGetActivityProfileUrl = (userId: number,) => {

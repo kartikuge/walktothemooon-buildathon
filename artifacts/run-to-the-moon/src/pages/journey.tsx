@@ -6,6 +6,7 @@ import { formatDate } from "@/lib/utils";
 import { ArrowLeft, Users } from "lucide-react";
 import { InteractiveMap } from "@/components/interactive-map";
 import { EffortCalculator } from "@/components/effort-calculator";
+import { MapGoalDate } from "@/components/map-goal-date";
 
 export default function JourneyDetail() {
   const { id } = useParams<{ id: string }>();
@@ -14,7 +15,7 @@ export default function JourneyDetail() {
   
   const { data: moonState, isLoading } = useGetMoonState(
     { userId, today },
-    { query: { queryKey: getGetMoonStateQueryKey({ userId, today }) } }
+    { query: { queryKey: getGetMoonStateQueryKey({ userId, today }), refetchInterval: 10000 } }
   );
 
   const journey = moonState?.journeys.find(j => j.id === id);
@@ -86,6 +87,8 @@ export default function JourneyDetail() {
             fraction={Math.min(1, journey.miles / Math.max(0.1, journey.totalMiles))} 
           />
         </div>
+
+        {journey.mapId && <MapGoalDate key={`${userId}-${journey.mapId}`} mapId={journey.mapId} userId={userId} teamId={journey.teamId ?? null} today={today} endDate={journey.endDate} onSaved={() => setCalcDate("")} />}
 
         {!journey.completed && (
           <div className="mb-8">

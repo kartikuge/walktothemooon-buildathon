@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { pool } from "@workspace/db";
 import { backfillMoonMaps } from "./moon-backfill";
 import moonRouter, { moonState } from "../routes/moon";
+import mapsRouter from "../routes/moon-maps";
 
 // All fixture writes and backfill DML are rolled back. No existing run is logged,
 // edited, or removed; sequence values may advance as with any rolled-back insert.
@@ -53,6 +54,36 @@ test("additive backfill, zero-mile enrollment, isolated completion and replay",a
     assert.equal(after.journeys.find(j=>j.mapId===solo)?.miles,0);
     assert.equal((await c.query("SELECT COUNT(*)::int AS n FROM moon_map_completions WHERE map_id=$1",[initial])).rows[0].n,2);
     assert.equal((await c.query("SELECT COUNT(*)::int AS n FROM moon_stamps WHERE user_id IN ($1,$2) AND route_id=$3",[user,peer,route])).rows[0].n,2);
+    const editHandler=(mapsRouter as any).stack.find((s:any)=>s.route?.path==="/moon/maps/:mapId/goal-date").route.stack[0].handle;
+    async function edit(mapId:number, runner:number, endDate:string) {
+      let result:any;
+      await editHandler({params:{mapId:String(mapId)},body:{userId:runner,today:"2026-01-02",endDate}}, {json(v:unknown){result=v;}});
+      return result;
+    }
+    const snapshot=async()=>({
+      runs:(await c.query("SELECT * FROM moon_runs WHERE map_id=ANY($1) ORDER BY id",[[initial,second,solo]])).rows,
+      stamps:(await c.query("SELECT * FROM moon_stamps WHERE user_id=ANY($1) ORDER BY user_id,route_id",[[user,peer]])).rows,
+      completions:(await c.query("SELECT * FROM moon_map_completions WHERE map_id=ANY($1) ORDER BY map_id,user_id",[[initial,second,solo]])).rows,
+    });
+    const progress=await snapshot();
+    const teamEdit=await edit(initial,peer,"2026-02-01");
+    assert.equal(teamEdit.endDate,"2026-02-01");
+    assert.equal(teamEdit.completed,true);
+    assert.equal(teamEdit.miles,5);
+    const soloEdit=await edit(solo,user,"2026-01-03");
+    assert.equal(soloEdit.endDate,"2026-01-03");
+    assert.ok(soloEdit.dailyTarget>0);
+    await assert.rejects(edit(solo,peer,"2026-02-01"),{status:403});
+    for(const date of ["","2026-02-30","2026-01-01","not-a-date"]) {
+      await assert.rejects(edit(solo,user,date),{status:400});
+    }
+    await assert.rejects(edit(2147483647,user,"2026-02-01"),{status:404});
+    await c.query("DELETE FROM moon_members WHERE team_id=$1 AND user_id=$2",[team,peer]);
+    await assert.rejects(edit(initial,peer,"2026-03-01"),{status:403});
+    assert.deepEqual(await snapshot(),progress);
+    const refreshed=await moonState(user,"2026-01-02");
+    assert.equal(refreshed.journeys.find(j=>j.mapId===initial)?.endDate,"2026-02-01");
+    assert.equal(refreshed.journeys.find(j=>j.mapId===second)?.endDate,"2099-12-31");
   }finally{
     pool.query=originalQuery;pool.connect=originalConnect;
     await c.query("ROLLBACK");c.release();await pool.end();

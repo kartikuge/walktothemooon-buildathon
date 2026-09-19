@@ -149,6 +149,7 @@ export default function Home() {
                       {j.completed && <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-md font-bold uppercase">Done</span>}
                     </div>
                     <p className="text-sm font-medium text-muted-foreground mb-4">{j.teamName}</p>
+                    <p className="text-xs text-muted-foreground mb-3">Goal date: <span className="font-mono">{j.endDate.split("T")[0]}</span></p>
                     
                     <div className="h-2 bg-secondary rounded-full overflow-hidden">
                       <div 

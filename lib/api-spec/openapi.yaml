@@ -50,6 +50,29 @@ paths:
           content:
             application/json:
               schema: {$ref: "#/components/schemas/Journey"}
+  /moon/maps/{mapId}/goal-date:
+    patch:
+      operationId: updateMapGoalDate
+      description: Solo owners or any current team member may edit the goal date. Progress is unchanged.
+      parameters:
+        - {name: mapId, in: path, required: true, schema: {type: integer}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/MapGoalDateInput"}
+      responses:
+        "200":
+          description: Updated Map with recalculated targets
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Journey"}
+        "400":
+          description: Invalid date or runner
+        "403":
+          description: Runner does not own or belong to this Map
+        "404":
+          description: Map or runner not found
   /moon/activity/{userId}:
     get:
       operationId: getActivityProfile
@@ -216,6 +239,13 @@ components:
         teamId: {type: [integer, "null"]}
         routeId: {type: integer}
         previewId: {type: string}
+        endDate: {type: string}
+        today: {type: string}
+    MapGoalDateInput:
+      type: object
+      required: [userId, endDate, today]
+      properties:
+        userId: {type: integer, minimum: 1}
         endDate: {type: string}
         today: {type: string}
     ActivitySession:

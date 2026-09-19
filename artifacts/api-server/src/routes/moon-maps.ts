@@ -6,6 +6,7 @@ import { searchCities, resolveCity, buildGeoPreview } from "../lib/geo";
 import { activityWeek, calculateEffort } from "../lib/effort";
 import { parseActivityProfile } from "../lib/activity-validation";
 import { moonState } from "./moon";
+import { UpdateMapGoalDateBody, UpdateMapGoalDateResponse } from "@workspace/api-zod";
 
 const router=Router();
 const validDay=(s:string)=>/^\d{4}-\d{2}-\d{2}$/.test(s)&&Number.isFinite(Date.parse(s))&&new Date(s).toISOString().slice(0,10)===s;
@@ -69,6 +70,23 @@ router.post("/moon/maps",async(req,res)=>{
   } catch(err:any) {await c.query("ROLLBACK");if(err.code==="23505")throw fail(409,"This Map is already enrolled. Your existing miles are unchanged.");throw err;} finally {c.release();}
   const state=await moonState(v.userId,v.today);
   res.status(201).json(AddMapResponse.parse(state.journeys.find(j=>j.mapId===mapId)));
+});
+router.patch("/moon/maps/:mapId/goal-date",async(req,res)=>{
+  const mapId=Number(req.params.mapId);
+  const parsed=UpdateMapGoalDateBody.safeParse(req.body);
+  if(!Number.isSafeInteger(mapId)||mapId<1||!parsed.success) throw fail(400,"Choose a valid Map, runner, and goal date.");
+  const v=parsed.data;
+  if(!validDay(v.today)||!validDay(v.endDate)||v.endDate<v.today) throw fail(400,"Goal date must be a valid date on or after today.");
+  await requireUser(v.userId);
+  const map=(await pool.query("SELECT id FROM moon_maps WHERE id=$1",[mapId])).rows[0];
+  if(!map) throw fail(404,"Map not found.");
+  // Membership is checked in the write itself; only the date can change.
+  const updated=await pool.query(`UPDATE moon_maps m SET end_date=$1 WHERE m.id=$2 AND
+    (m.solo_user_id=$3 OR EXISTS(SELECT 1 FROM moon_members WHERE team_id=m.team_id AND user_id=$3))
+    RETURNING m.id`,[v.endDate,mapId,v.userId]);
+  if(!updated.rowCount) throw fail(403,"Only the solo owner or a current team member can change this goal date.");
+  const state=await moonState(v.userId,v.today);
+  res.json(UpdateMapGoalDateResponse.parse(state.journeys.find(j=>j.mapId===mapId)));
 });
 router.get("/moon/activity/:userId",async(req,res)=>{
   const id=Number(req.params.userId);await requireUser(id);res.json(await loadActivity(id));

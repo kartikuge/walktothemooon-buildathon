@@ -68,6 +68,13 @@ export interface MapInput {
   today: string;
 }
 
+export interface MapGoalDateInput {
+  /** @minimum 1 */
+  userId: number;
+  endDate: string;
+  today: string;
+}
+
 export interface ActivitySession {
   /**
      * @minLength 1

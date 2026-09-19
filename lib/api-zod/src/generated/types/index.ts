@@ -20,6 +20,7 @@ export * from './journey';
 export * from './mapEstimate';
 export * from './mapGeometry';
 export * from './mapGeometryMode';
+export * from './mapGoalDateInput';
 export * from './mapInput';
 export * from './mapPreview';
 export * from './mapPreviewInput';
