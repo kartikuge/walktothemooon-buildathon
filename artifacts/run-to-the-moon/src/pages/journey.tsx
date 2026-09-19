@@ -1,8 +1,11 @@
+import { useState } from "react";
 import { Link, useParams } from "wouter";
 import { useUser } from "@/hooks/use-user";
 import { useGetMoonState, getGetMoonStateQueryKey } from "@workspace/api-client-react";
 import { formatDate } from "@/lib/utils";
-import { ArrowLeft, Users, Trophy } from "lucide-react";
+import { ArrowLeft, Users } from "lucide-react";
+import { InteractiveMap } from "@/components/interactive-map";
+import { EffortCalculator } from "@/components/effort-calculator";
 
 export default function JourneyDetail() {
   const { id } = useParams<{ id: string }>();
@@ -14,11 +17,12 @@ export default function JourneyDetail() {
     { query: { queryKey: getGetMoonStateQueryKey({ userId, today }) } }
   );
 
+  const journey = moonState?.journeys.find(j => j.id === id);
+  const [calcDate, setCalcDate] = useState<string>("");
+
   if (isLoading || !moonState) {
     return <div className="p-6 h-screen flex items-center justify-center font-mono text-muted-foreground animate-pulse">Loading journey...</div>;
   }
-
-  const journey = moonState.journeys.find(j => j.id === id);
 
   if (!journey) {
     return (
@@ -28,6 +32,8 @@ export default function JourneyDetail() {
       </div>
     );
   }
+
+  const activeCalcDate = calcDate || journey.endDate.split('T')[0];
 
   return (
     <div className="animate-in slide-in-from-bottom-4 duration-500 pb-8">
@@ -65,20 +71,34 @@ export default function JourneyDetail() {
           </div>
         </div>
 
-        <div className="bg-secondary/50 rounded-2xl p-5 mb-10 border border-border space-y-4 shadow-inner">
-          <div className="flex justify-between items-center pb-4 border-b border-border/50">
+        <div className="bg-secondary/50 rounded-2xl p-5 mb-8 border border-border space-y-4 shadow-inner">
+          <div className="flex justify-between items-center pb-1">
             <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-muted-foreground">
               <Users size={16} /> Team Members
             </div>
             <span className="font-mono font-bold text-lg">{journey.memberCount}</span>
           </div>
-          <div className="flex justify-between items-center pt-1">
-            <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-accent">
-              <Trophy size={16} /> Top Contributor
-            </div>
-            <span className="font-bold text-lg">{journey.topContributor}</span>
-          </div>
         </div>
+
+        <div className="mb-8">
+          <InteractiveMap 
+            geometry={journey.geometry} 
+            fraction={Math.min(1, journey.miles / Math.max(0.1, journey.totalMiles))} 
+          />
+        </div>
+
+        {!journey.completed && (
+          <div className="mb-8">
+            <EffortCalculator 
+              userId={userId}
+              teamId={journey.teamId || null}
+              totalMiles={journey.remainingMiles}
+              today={today}
+              endDate={activeCalcDate}
+              onEndDateChange={setCalcDate}
+            />
+          </div>
+        )}
         
         <div className="text-center px-4 py-8 border-t border-border mt-auto">
           <p className="text-sm font-medium text-muted-foreground/80 leading-relaxed italic">

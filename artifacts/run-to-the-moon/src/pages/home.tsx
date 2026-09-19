@@ -77,7 +77,12 @@ export default function Home() {
       </div>
 
       <div className="px-5 mt-10 mb-8">
-        <h2 className="text-lg font-bold tracking-tight mb-4">Active Journeys</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-bold tracking-tight">Active Maps</h2>
+          <Link href="/maps/add" className="text-xs font-bold bg-primary text-primary-foreground px-3 py-1.5 rounded-lg uppercase tracking-wider shadow-sm">
+            + Add a Map
+          </Link>
+        </div>
         <div className="flex flex-col gap-4">
           {journeys.map(j => {
             const jProgress = (j.miles / j.totalMiles) * 100;
@@ -114,7 +119,7 @@ export default function Home() {
           
           {journeys.length === 0 && (
             <div className="text-center p-8 bg-secondary/50 rounded-2xl border border-dashed border-border">
-              <p className="text-muted-foreground font-medium">No active journeys found.</p>
+              <p className="text-muted-foreground font-medium">No active maps found.</p>
             </div>
           )}
         </div>

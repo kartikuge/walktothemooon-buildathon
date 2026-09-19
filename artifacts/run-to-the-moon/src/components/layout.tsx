@@ -50,7 +50,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <>
                 <div className="fixed inset-0 z-40 bg-background/50 backdrop-blur-sm" onClick={() => setMenuOpen(false)} />
                 <div className="absolute top-14 right-4 bg-card border border-border shadow-2xl rounded-2xl p-2 flex flex-col gap-1 z-50 animate-in slide-in-from-top-4 fade-in duration-200 min-w-[180px]">
+                  <Link href="/maps/add" onClick={() => setMenuOpen(false)} className="px-4 py-3 font-bold font-mono text-sm uppercase hover:bg-secondary rounded-xl transition-colors flex items-center">Add a Map</Link>
                   <Link href="/teams" onClick={() => setMenuOpen(false)} className="px-4 py-3 font-bold font-mono text-sm uppercase hover:bg-secondary rounded-xl transition-colors flex items-center">My Teams</Link>
+                  <Link href="/activity" onClick={() => setMenuOpen(false)} className="px-4 py-3 font-bold font-mono text-sm uppercase hover:bg-secondary rounded-xl transition-colors flex items-center">Activity Profile</Link>
                   <Link href="/planner" onClick={() => setMenuOpen(false)} className="px-4 py-3 font-bold font-mono text-sm uppercase hover:bg-secondary rounded-xl transition-colors flex items-center">Route Planner</Link>
                   <Link href="/stats" onClick={() => setMenuOpen(false)} className="px-4 py-3 font-bold font-mono text-sm uppercase hover:bg-secondary rounded-xl transition-colors flex items-center">My Stats</Link>
                 </div>

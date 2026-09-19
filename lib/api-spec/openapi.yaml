@@ -11,6 +11,85 @@ tags:
   - name: health
     description: Health operations
 paths:
+  /moon/places:
+    get:
+      operationId: searchPlaces
+      parameters:
+        - {name: q, in: query, required: true, schema: {type: string, minLength: 2, maxLength: 100}}
+      responses:
+        "200":
+          description: Matching cities
+          content:
+            application/json:
+              schema: {type: array, items: {$ref: "#/components/schemas/City"}}
+  /moon/map-preview:
+    post:
+      operationId: previewMap
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/MapPreviewInput"}
+      responses:
+        "200":
+          description: Verified distance and geometry, saved for adding a Map
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/MapPreview"}
+  /moon/maps:
+    post:
+      operationId: addMap
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/MapInput"}
+      responses:
+        "201":
+          description: Map enrollment created
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Journey"}
+  /moon/activity/{userId}:
+    get:
+      operationId: getActivityProfile
+      parameters:
+        - {name: userId, in: path, required: true, schema: {type: integer}}
+      responses:
+        "200":
+          description: Saved personal activity schedule
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/ActivityProfile"}
+    put:
+      operationId: saveActivityProfile
+      parameters:
+        - {name: userId, in: path, required: true, schema: {type: integer}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/ActivityInput"}
+      responses:
+        "200":
+          description: Saved activity schedule
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/ActivityProfile"}
+  /moon/estimates:
+    post:
+      operationId: estimateMap
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/EstimateInput"}
+      responses:
+        "200":
+          description: Shared effort and finish estimate
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/MapEstimate"}
   /moon/profile:
     get:
       operationId: getRunnerProfile
@@ -92,10 +171,117 @@ paths:
                 $ref: "#/components/schemas/HealthStatus"
 components:
   schemas:
+    City:
+      type: object
+      required: [id, name, label, latitude, longitude]
+      properties:
+        id: {type: integer}
+        name: {type: string}
+        label: {type: string}
+        latitude: {type: number}
+        longitude: {type: number}
+    MapGeometry:
+      type: object
+      required: [mode, coordinates, attribution, description]
+      properties:
+        mode: {type: string, enum: [virtual, walking, event, preset]}
+        coordinates:
+          type: array
+          description: Ordered latitude longitude pairs
+          items: {type: array, items: {type: number}, minItems: 2, maxItems: 2}
+        origin: {$ref: "#/components/schemas/City"}
+        destination: {$ref: "#/components/schemas/City"}
+        attribution: {type: string}
+        description: {type: string}
+    MapPreviewInput:
+      type: object
+      required: [originId, destinationId, mode]
+      properties:
+        originId: {type: integer}
+        destinationId: {type: integer}
+        mode: {type: string, enum: [virtual, walking]}
+    MapPreview:
+      type: object
+      required: [previewId, name, totalMiles, geometry]
+      properties:
+        previewId: {type: string}
+        name: {type: string}
+        totalMiles: {type: number}
+        geometry: {$ref: "#/components/schemas/MapGeometry"}
+    MapInput:
+      type: object
+      required: [userId, teamId, endDate, today]
+      properties:
+        userId: {type: integer}
+        teamId: {type: [integer, "null"]}
+        routeId: {type: integer}
+        previewId: {type: string}
+        endDate: {type: string}
+        today: {type: string}
+    ActivitySession:
+      type: object
+      required: [id, name, miles, days]
+      properties:
+        id: {type: string, minLength: 1, maxLength: 100}
+        name: {type: string, minLength: 1, maxLength: 80}
+        miles: {type: number, minimum: 0.01, maximum: 200}
+        days: {type: array, minItems: 1, maxItems: 7, items: {type: integer, minimum: 0, maximum: 6}}
+    ActivityInput:
+      type: object
+      required: [homeCity, dailyMiles, restDays, commuteMiles, commuteDays, sessions]
+      properties:
+        homeCity:
+          anyOf:
+            - {$ref: "#/components/schemas/City"}
+            - {type: "null"}
+        dailyMiles: {type: number, minimum: 0, maximum: 200}
+        restDays: {type: array, maxItems: 7, items: {type: integer, minimum: 0, maximum: 6}}
+        commuteMiles: {type: number, minimum: 0, maximum: 100}
+        commuteDays: {type: array, maxItems: 7, items: {type: integer, minimum: 0, maximum: 6}}
+        sessions: {type: array, maxItems: 20, items: {$ref: "#/components/schemas/ActivitySession"}}
+    ActivityProfile:
+      allOf:
+        - {$ref: "#/components/schemas/ActivityInput"}
+        - type: object
+          required: [userId, configured, weeklyMiles]
+          properties:
+            userId: {type: integer}
+            configured: {type: boolean}
+            weeklyMiles: {type: number}
+    EstimateInput:
+      type: object
+      required: [userId, teamId, totalMiles, today, endDate]
+      properties:
+        userId: {type: integer}
+        teamId: {type: [integer, "null"]}
+        participantCount: {type: integer, minimum: 1, maximum: 10000}
+        totalMiles: {type: number, minimum: 0, maximum: 100000}
+        today: {type: string}
+        endDate: {type: string}
+    MapEstimate:
+      type: object
+      required: [participantCount, actualMemberCount, configuredProfiles, scenario, calendarDays, activeDays, requiredPerPersonDay, requiredPerActiveDay, milesPerPerson, weeklyMiles, projectedMilesByGoal, expectedFinishDate, daysToFinish, withinGoal, explanation]
+      properties:
+        participantCount: {type: integer}
+        actualMemberCount: {type: integer}
+        configuredProfiles: {type: integer}
+        scenario: {type: boolean}
+        calendarDays: {type: integer}
+        activeDays: {type: integer}
+        requiredPerPersonDay: {type: [number, "null"]}
+        requiredPerActiveDay: {type: [number, "null"]}
+        milesPerPerson: {type: number}
+        weeklyMiles: {type: number}
+        projectedMilesByGoal: {type: number}
+        expectedFinishDate: {type: [string, "null"]}
+        daysToFinish: {type: [integer, "null"]}
+        withinGoal: {type: [boolean, "null"]}
+        explanation: {type: string}
     RouteInfo:
       type: object
       required: [id, name, type, totalMiles, emoji, gradientFrom, gradientTo]
       properties:
+        geometry: {$ref: "#/components/schemas/MapGeometry"}
         id: {type: integer}
         name: {type: string}
         type: {type: string}
@@ -152,6 +338,8 @@ components:
       type: object
       required: [id, routeId, name, teamName, totalMiles, miles, remainingMiles, daysRemaining, dailyTarget, memberCount, topContributor, emoji, gradientFrom, gradientTo, endDate, completed, type]
       properties:
+        mapId: {type: integer}
+        geometry: {$ref: "#/components/schemas/MapGeometry"}
         id: {type: string}
         routeId: {type: integer}
         teamId: {type: [integer, "null"]}
@@ -203,6 +391,7 @@ components:
       type: object
       required: [userId, routeId, teamId, miles, durationMinutes, loggedAt, requestId]
       properties:
+        mapId: {type: integer}
         userId: {type: integer, minimum: 1}
         routeId: {type: integer, minimum: 1}
         teamId: {type: [integer, "null"]}

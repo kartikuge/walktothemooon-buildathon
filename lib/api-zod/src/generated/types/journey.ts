@@ -5,8 +5,11 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { MapGeometry } from './mapGeometry';
 
 export interface Journey {
+  mapId?: number;
+  geometry?: MapGeometry;
   id: string;
   routeId: number;
   /** @nullable */

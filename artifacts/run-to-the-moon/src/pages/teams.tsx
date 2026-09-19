@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useUser } from "@/hooks/use-user";
 import { 
   useGetRunnerProfile, 
+  useGetMoonState,
   getGetRunnerProfileQueryKey, 
   getGetMoonStateQueryKey,
   useCreateTeam, 
@@ -38,9 +39,14 @@ export default function Teams() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
-  const { data: profile, isLoading, isError, refetch } = useGetRunnerProfile(
+  const { data: profile, isLoading: isProfileLoading, isError, refetch } = useGetRunnerProfile(
     { userId, today },
     { query: { queryKey: getGetRunnerProfileQueryKey({ userId, today }), refetchInterval: 10000 } }
+  );
+
+  const { data: moonState, isLoading: isMoonLoading } = useGetMoonState(
+    { userId, today },
+    { query: { queryKey: getGetMoonStateQueryKey({ userId, today }), refetchInterval: 10000 } }
   );
 
   const createTeam = useCreateTeam();
@@ -114,8 +120,8 @@ export default function Teams() {
     });
   };
 
-  if (isLoading) return <div className="p-8 text-center font-mono text-muted-foreground animate-pulse mt-12">Loading teams...</div>;
-  if (isError || !profile) return (
+  if (isProfileLoading || isMoonLoading) return <div className="p-8 text-center font-mono text-muted-foreground animate-pulse mt-12">Loading teams...</div>;
+  if (isError || !profile || !moonState) return (
     <div className="p-8 text-center flex flex-col items-center gap-4 mt-12">
       <div className="text-destructive font-mono">Failed to load teams</div>
       <Button onClick={() => refetch()} variant="outline"><RefreshCw className="w-4 h-4 mr-2" /> Retry</Button>
@@ -223,13 +229,13 @@ export default function Teams() {
           </div>
         ) : (
           profile.teams.map(team => {
-            const route = profile.routes.find(r => r.id === team.routeId);
+            const teamJourneys = moonState.journeys.filter(j => j.teamId === team.id);
             return (
               <Card key={team.id} className="overflow-hidden border-primary/10 shadow-lg shadow-primary/5 rounded-2xl transition-transform active:scale-[0.98]">
                 <CardHeader className="pb-3 bg-card relative z-10">
                   <div className="flex justify-between items-start">
                     <CardTitle className="text-xl font-black font-sans flex items-center gap-3">
-                      <span className="text-3xl drop-shadow-sm">{route?.emoji}</span> {team.name}
+                      <span className="text-3xl drop-shadow-sm">🤝</span> {team.name}
                     </CardTitle>
                     <button 
                       onClick={(e) => { e.preventDefault(); handleCopy(team.inviteCode); }} 
@@ -243,6 +249,23 @@ export default function Teams() {
                     Target Date: <span className="text-foreground">{new Date(team.endDate).toLocaleDateString()}</span>
                   </CardDescription>
                 </CardHeader>
+                <div className="bg-card px-6 pb-2">
+                  <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Team Maps</h3>
+                  <div className="space-y-2 mb-3">
+                    {teamJourneys.length === 0 && <p className="text-sm text-muted-foreground italic">No active maps</p>}
+                    {teamJourneys.map(j => (
+                      <Link key={j.id} href={`/journey/${j.id}`} className="flex items-center justify-between p-2 rounded-xl hover:bg-secondary transition-colors border border-border">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xl">{j.emoji}</span>
+                          <span className="font-bold text-sm">{j.name}</span>
+                        </div>
+                        <div className="text-xs font-mono font-bold text-muted-foreground">
+                          {j.miles.toFixed(1)} / {j.totalMiles.toFixed(0)} mi
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
                 <CardFooter className="pt-3 pb-3 bg-muted/30 border-t border-border/50">
                    <Link href={`/competition`} className="text-primary text-sm font-bold uppercase tracking-wider flex items-center gap-1.5 hover:underline w-full justify-center">
                      <LinkIcon size={14} /> View Global Leaderboard

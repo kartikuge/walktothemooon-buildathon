@@ -6,17 +6,30 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './activityInput';
+export * from './activityProfile';
+export * from './activitySession';
+export * from './city';
 export * from './competition';
+export * from './estimateInput';
 export * from './getMoonStateParams';
 export * from './getRunnerProfileParams';
 export * from './healthStatus';
 export * from './joinInput';
 export * from './journey';
+export * from './mapEstimate';
+export * from './mapGeometry';
+export * from './mapGeometryMode';
+export * from './mapInput';
+export * from './mapPreview';
+export * from './mapPreviewInput';
+export * from './mapPreviewInputMode';
 export * from './moonState';
 export * from './routeInfo';
 export * from './runInput';
 export * from './runnerProfile';
 export * from './runResult';
+export * from './searchPlacesParams';
 export * from './stamp';
 export * from './teamInput';
 export * from './teamReceipt';

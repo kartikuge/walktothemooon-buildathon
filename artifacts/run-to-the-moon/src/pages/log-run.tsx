@@ -8,14 +8,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Activity, Watch, Loader2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 
 export default function LogRun() {
   const { userId } = useUser();
   const today = formatDate(new Date());
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   
-  const { data: moonState, isLoading: isLoadingState } = useGetMoonState(
+  const { data: moonState, isLoading: isLoadingState, isError: isErrorState } = useGetMoonState(
     { userId, today },
     { query: { queryKey: getGetMoonStateQueryKey({ userId, today }) } }
   );
@@ -25,14 +27,14 @@ export default function LogRun() {
   const [miles, setMiles] = useState("");
   const [duration, setDuration] = useState("");
   const [loggedAt, setLoggedAt] = useState(today);
-  const [routeId, setRouteId] = useState("");
+  const [journeyId, setJourneyId] = useState("");
   const [simulating, setSimulating] = useState(false);
 
-  // Set default routeId once data loads
-  if (moonState && !routeId) {
+  // Set default journey once data loads
+  if (moonState && !journeyId) {
     const defaultJourney = moonState.journeys.find(j => j.teamName === "Steel City Striders") || moonState.journeys[0];
     if (defaultJourney) {
-      setRouteId(String(defaultJourney.routeId));
+      setJourneyId(defaultJourney.id);
     }
   }
 
@@ -47,14 +49,15 @@ export default function LogRun() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!miles || !duration || !routeId || !loggedAt) return;
+    if (!miles || !duration || !journeyId || !loggedAt) return;
 
-    const journey = moonState?.journeys.find(j => j.routeId === Number(routeId));
+    const journey = moonState?.journeys.find(j => j.id === journeyId);
 
     logRun({
       data: {
         userId,
-        routeId: Number(routeId),
+        mapId: journey?.mapId,
+        routeId: journey?.routeId || 0,
         teamId: journey?.teamId || null,
         miles: Number(miles),
         durationMinutes: Number(duration),
@@ -78,12 +81,18 @@ export default function LogRun() {
           // If not completed, just return home
           setLocation('/');
         }
+      },
+      onError: (err: any) => {
+        toast({ title: "Failed to log run", description: err.message, variant: "destructive" });
       }
     });
   };
 
-  if (isLoadingState || !moonState) {
+  if (isLoadingState) {
     return <div className="p-6 text-center mt-20 font-mono animate-pulse">Loading...</div>;
+  }
+  if (isErrorState || !moonState) {
+    return <div className="p-6 text-center mt-20 font-mono text-destructive">Failed to load journeys. Please try again.</div>;
   }
 
   return (
@@ -161,12 +170,12 @@ export default function LogRun() {
               id="journey"
               className="flex h-14 w-full rounded-2xl border border-border bg-card px-4 py-2 text-base font-bold ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring appearance-none pr-10"
               style={{ backgroundImage: 'url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%231a202c%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem top 50%', backgroundSize: '0.65rem auto' }}
-              value={routeId}
-              onChange={(e) => setRouteId(e.target.value)}
+              value={journeyId}
+              onChange={(e) => setJourneyId(e.target.value)}
               required
             >
               {moonState.journeys.map(j => (
-                <option key={j.routeId} value={String(j.routeId)}>
+                <option key={j.id} value={j.id}>
                   {j.emoji} {j.name} ({j.teamName})
                 </option>
               ))}

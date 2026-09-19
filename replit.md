@@ -42,3 +42,22 @@ P2 (only if genuinely ahead): react-leaflet + OSM tiles on map detail
 Home -> log 9 miles -> Steel City Striders cross 300 mi -> stamp celebration
 showing "+9.0 mi to the Moon" -> Passport.
 Fix anything on this path before anything else.
+
+## Approved Maps expansion
+The user has now approved P1, P2, and custom city-to-city Maps. These decisions
+supersede the earlier "do not build today" restrictions on maps/custom routes:
+- Call selectable journeys "Maps" in the interface.
+- Offer clearly labelled virtual great-circle distances and real pedestrian
+  routes where the routing service supports them; never silently swap modes.
+- Home supports adding preset or custom Maps, solo or with an existing team.
+  Teams can have several independent Maps; a logged run belongs to one Map
+  and adds to the global Moon counter once.
+- Personal activity profiles support a home city, baseline daily miles,
+  walking commutes, and dedicated sessions. Plans do not automatically log runs.
+- Group estimates may show equal-share examples and hypothetical participant
+  counts, but must not impose member quotas, rankings, or shame warnings.
+- Keep fixed-distance event challenges distinct from geographic travel Maps.
+- Public Open-Meteo geocoding is for this non-commercial demo; Valhalla/FOSSGIS
+  routing and standard OpenStreetMap tiles are usage-limited public services.
+  Preserve attribution and caching; use suitable production providers before
+  expanding beyond their allowed usage.

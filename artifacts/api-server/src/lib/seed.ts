@@ -1,4 +1,5 @@
 import { pool } from "@workspace/db";
+import { backfillMoonMaps } from "./moon-backfill";
 
 export async function seedMoon() {
   const c = await pool.connect();
@@ -6,7 +7,7 @@ export async function seedMoon() {
     await c.query("BEGIN");
     await c.query("SELECT pg_advisory_xact_lock(41200)");
     const existing = await c.query("SELECT id FROM moon_settings WHERE id=1");
-    if (existing.rowCount) { await c.query("COMMIT"); return; }
+    if (existing.rowCount) { await backfillMoonMaps(c); await c.query("COMMIT"); return; }
     const names = ["Kartik","Maneeth","Acyuth","Nihal","Priya","Dev","Sam","Ana","Raj"];
     for (let i=0;i<names.length;i++) await c.query("INSERT INTO moon_users(id,name,avatar_emoji) VALUES($1,$2,$3)",[i+1,names[i],["🏃","⚡","🌟","🚀","🌸","🌲","☀️","🌊","🔥"][i]]);
     await c.query(`INSERT INTO moon_routes(id,name,type,total_miles,emoji,gradient_from,gradient_to) VALUES
@@ -34,6 +35,7 @@ export async function seedMoon() {
     for (const table of ["moon_users","moon_routes","moon_teams","moon_competitions"]) {
       await c.query(`SELECT setval(pg_get_serial_sequence('${table}','id'),(SELECT MAX(id) FROM ${table}))`);
     }
+    await backfillMoonMaps(c);
     await c.query("COMMIT");
   } catch(e) { await c.query("ROLLBACK"); throw e; } finally { c.release(); }
 }

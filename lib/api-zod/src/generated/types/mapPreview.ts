@@ -7,13 +7,9 @@
  */
 import type { MapGeometry } from './mapGeometry';
 
-export interface RouteInfo {
-  geometry?: MapGeometry;
-  id: number;
+export interface MapPreview {
+  previewId: string;
   name: string;
-  type: string;
   totalMiles: number;
-  emoji: string;
-  gradientFrom: string;
-  gradientTo: string;
+  geometry: MapGeometry;
 }

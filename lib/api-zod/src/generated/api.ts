@@ -8,13 +8,361 @@
 import * as zod from 'zod';
 
 
+export const searchPlacesQueryQMin = 2;
+export const searchPlacesQueryQMax = 100;
+
+
+
+export const SearchPlacesQueryParams = zod.object({
+  "q": zod.coerce.string().min(searchPlacesQueryQMin).max(searchPlacesQueryQMax)
+})
+
+export const SearchPlacesResponseItem = zod.object({
+  "id": zod.number().int(),
+  "name": zod.string(),
+  "label": zod.string(),
+  "latitude": zod.number(),
+  "longitude": zod.number()
+})
+export const SearchPlacesResponse = zod.array(SearchPlacesResponseItem)
+
+
+export const PreviewMapBody = zod.object({
+  "originId": zod.number().int(),
+  "destinationId": zod.number().int(),
+  "mode": zod.enum(['virtual', 'walking'])
+})
+
+export const previewMapResponseGeometryCoordinatesItemMin = 2;
+export const previewMapResponseGeometryCoordinatesItemMax = 2;
+
+
+
+export const PreviewMapResponse = zod.object({
+  "previewId": zod.string(),
+  "name": zod.string(),
+  "totalMiles": zod.number(),
+  "geometry": zod.object({
+  "mode": zod.enum(['virtual', 'walking', 'event', 'preset']),
+  "coordinates": zod.array(zod.array(zod.number()).min(previewMapResponseGeometryCoordinatesItemMin).max(previewMapResponseGeometryCoordinatesItemMax)).describe('Ordered latitude longitude pairs'),
+  "origin": zod.object({
+  "id": zod.number().int(),
+  "name": zod.string(),
+  "label": zod.string(),
+  "latitude": zod.number(),
+  "longitude": zod.number()
+}).optional(),
+  "destination": zod.object({
+  "id": zod.number().int(),
+  "name": zod.string(),
+  "label": zod.string(),
+  "latitude": zod.number(),
+  "longitude": zod.number()
+}).optional(),
+  "attribution": zod.string(),
+  "description": zod.string()
+})
+})
+
+
+export const AddMapBody = zod.object({
+  "userId": zod.number().int(),
+  "teamId": zod.number().int().nullable(),
+  "routeId": zod.number().int().optional(),
+  "previewId": zod.string().optional(),
+  "endDate": zod.string(),
+  "today": zod.string()
+})
+
+export const addMapResponseGeometryCoordinatesItemMin = 2;
+export const addMapResponseGeometryCoordinatesItemMax = 2;
+
+
+
+export const AddMapResponse = zod.object({
+  "mapId": zod.number().int().optional(),
+  "geometry": zod.object({
+  "mode": zod.enum(['virtual', 'walking', 'event', 'preset']),
+  "coordinates": zod.array(zod.array(zod.number()).min(addMapResponseGeometryCoordinatesItemMin).max(addMapResponseGeometryCoordinatesItemMax)).describe('Ordered latitude longitude pairs'),
+  "origin": zod.object({
+  "id": zod.number().int(),
+  "name": zod.string(),
+  "label": zod.string(),
+  "latitude": zod.number(),
+  "longitude": zod.number()
+}).optional(),
+  "destination": zod.object({
+  "id": zod.number().int(),
+  "name": zod.string(),
+  "label": zod.string(),
+  "latitude": zod.number(),
+  "longitude": zod.number()
+}).optional(),
+  "attribution": zod.string(),
+  "description": zod.string()
+}).optional(),
+  "id": zod.string(),
+  "routeId": zod.number().int(),
+  "teamId": zod.number().int().nullish(),
+  "name": zod.string(),
+  "teamName": zod.string(),
+  "totalMiles": zod.number(),
+  "miles": zod.number(),
+  "remainingMiles": zod.number(),
+  "daysRemaining": zod.number().int(),
+  "dailyTarget": zod.number(),
+  "memberCount": zod.number().int(),
+  "topContributor": zod.string(),
+  "emoji": zod.string(),
+  "gradientFrom": zod.string(),
+  "gradientTo": zod.string(),
+  "endDate": zod.string(),
+  "completed": zod.boolean(),
+  "type": zod.string()
+})
+
+
+export const GetActivityProfileParams = zod.object({
+  "userId": zod.coerce.number().int()
+})
+
+export const getActivityProfileResponseOneDailyMilesMin = 0;
+export const getActivityProfileResponseOneDailyMilesMax = 200;
+
+export const getActivityProfileResponseOneRestDaysItemMin = 0;
+export const getActivityProfileResponseOneRestDaysItemMax = 6;
+
+export const getActivityProfileResponseOneRestDaysMax = 7;
+
+export const getActivityProfileResponseOneCommuteMilesMin = 0;
+export const getActivityProfileResponseOneCommuteMilesMax = 100;
+
+export const getActivityProfileResponseOneCommuteDaysItemMin = 0;
+export const getActivityProfileResponseOneCommuteDaysItemMax = 6;
+
+export const getActivityProfileResponseOneCommuteDaysMax = 7;
+
+export const getActivityProfileResponseOneSessionsItemIdMax = 100;
+
+export const getActivityProfileResponseOneSessionsItemNameMax = 80;
+
+export const getActivityProfileResponseOneSessionsItemMilesMin = 0.01;
+export const getActivityProfileResponseOneSessionsItemMilesMax = 200;
+
+export const getActivityProfileResponseOneSessionsItemDaysItemMin = 0;
+export const getActivityProfileResponseOneSessionsItemDaysItemMax = 6;
+
+export const getActivityProfileResponseOneSessionsItemDaysMax = 7;
+
+export const getActivityProfileResponseOneSessionsMax = 20;
+
+
+
+export const GetActivityProfileResponse = zod.object({
+  "homeCity": zod.union([zod.object({
+  "id": zod.number().int(),
+  "name": zod.string(),
+  "label": zod.string(),
+  "latitude": zod.number(),
+  "longitude": zod.number()
+}),zod.null()]),
+  "dailyMiles": zod.number().min(getActivityProfileResponseOneDailyMilesMin).max(getActivityProfileResponseOneDailyMilesMax),
+  "restDays": zod.array(zod.number().int().min(getActivityProfileResponseOneRestDaysItemMin).max(getActivityProfileResponseOneRestDaysItemMax)).max(getActivityProfileResponseOneRestDaysMax),
+  "commuteMiles": zod.number().min(getActivityProfileResponseOneCommuteMilesMin).max(getActivityProfileResponseOneCommuteMilesMax),
+  "commuteDays": zod.array(zod.number().int().min(getActivityProfileResponseOneCommuteDaysItemMin).max(getActivityProfileResponseOneCommuteDaysItemMax)).max(getActivityProfileResponseOneCommuteDaysMax),
+  "sessions": zod.array(zod.object({
+  "id": zod.string().min(1).max(getActivityProfileResponseOneSessionsItemIdMax),
+  "name": zod.string().min(1).max(getActivityProfileResponseOneSessionsItemNameMax),
+  "miles": zod.number().min(getActivityProfileResponseOneSessionsItemMilesMin).max(getActivityProfileResponseOneSessionsItemMilesMax),
+  "days": zod.array(zod.number().int().min(getActivityProfileResponseOneSessionsItemDaysItemMin).max(getActivityProfileResponseOneSessionsItemDaysItemMax)).min(1).max(getActivityProfileResponseOneSessionsItemDaysMax)
+})).max(getActivityProfileResponseOneSessionsMax)
+}).and(zod.object({
+  "userId": zod.number().int(),
+  "configured": zod.boolean(),
+  "weeklyMiles": zod.number()
+}))
+
+
+export const SaveActivityProfileParams = zod.object({
+  "userId": zod.coerce.number().int()
+})
+
+export const saveActivityProfileBodyDailyMilesMin = 0;
+export const saveActivityProfileBodyDailyMilesMax = 200;
+
+export const saveActivityProfileBodyRestDaysItemMin = 0;
+export const saveActivityProfileBodyRestDaysItemMax = 6;
+
+export const saveActivityProfileBodyRestDaysMax = 7;
+
+export const saveActivityProfileBodyCommuteMilesMin = 0;
+export const saveActivityProfileBodyCommuteMilesMax = 100;
+
+export const saveActivityProfileBodyCommuteDaysItemMin = 0;
+export const saveActivityProfileBodyCommuteDaysItemMax = 6;
+
+export const saveActivityProfileBodyCommuteDaysMax = 7;
+
+export const saveActivityProfileBodySessionsItemIdMax = 100;
+
+export const saveActivityProfileBodySessionsItemNameMax = 80;
+
+export const saveActivityProfileBodySessionsItemMilesMin = 0.01;
+export const saveActivityProfileBodySessionsItemMilesMax = 200;
+
+export const saveActivityProfileBodySessionsItemDaysItemMin = 0;
+export const saveActivityProfileBodySessionsItemDaysItemMax = 6;
+
+export const saveActivityProfileBodySessionsItemDaysMax = 7;
+
+export const saveActivityProfileBodySessionsMax = 20;
+
+
+
+export const SaveActivityProfileBody = zod.object({
+  "homeCity": zod.union([zod.object({
+  "id": zod.number().int(),
+  "name": zod.string(),
+  "label": zod.string(),
+  "latitude": zod.number(),
+  "longitude": zod.number()
+}),zod.null()]),
+  "dailyMiles": zod.number().min(saveActivityProfileBodyDailyMilesMin).max(saveActivityProfileBodyDailyMilesMax),
+  "restDays": zod.array(zod.number().int().min(saveActivityProfileBodyRestDaysItemMin).max(saveActivityProfileBodyRestDaysItemMax)).max(saveActivityProfileBodyRestDaysMax),
+  "commuteMiles": zod.number().min(saveActivityProfileBodyCommuteMilesMin).max(saveActivityProfileBodyCommuteMilesMax),
+  "commuteDays": zod.array(zod.number().int().min(saveActivityProfileBodyCommuteDaysItemMin).max(saveActivityProfileBodyCommuteDaysItemMax)).max(saveActivityProfileBodyCommuteDaysMax),
+  "sessions": zod.array(zod.object({
+  "id": zod.string().min(1).max(saveActivityProfileBodySessionsItemIdMax),
+  "name": zod.string().min(1).max(saveActivityProfileBodySessionsItemNameMax),
+  "miles": zod.number().min(saveActivityProfileBodySessionsItemMilesMin).max(saveActivityProfileBodySessionsItemMilesMax),
+  "days": zod.array(zod.number().int().min(saveActivityProfileBodySessionsItemDaysItemMin).max(saveActivityProfileBodySessionsItemDaysItemMax)).min(1).max(saveActivityProfileBodySessionsItemDaysMax)
+})).max(saveActivityProfileBodySessionsMax)
+})
+
+export const saveActivityProfileResponseOneDailyMilesMin = 0;
+export const saveActivityProfileResponseOneDailyMilesMax = 200;
+
+export const saveActivityProfileResponseOneRestDaysItemMin = 0;
+export const saveActivityProfileResponseOneRestDaysItemMax = 6;
+
+export const saveActivityProfileResponseOneRestDaysMax = 7;
+
+export const saveActivityProfileResponseOneCommuteMilesMin = 0;
+export const saveActivityProfileResponseOneCommuteMilesMax = 100;
+
+export const saveActivityProfileResponseOneCommuteDaysItemMin = 0;
+export const saveActivityProfileResponseOneCommuteDaysItemMax = 6;
+
+export const saveActivityProfileResponseOneCommuteDaysMax = 7;
+
+export const saveActivityProfileResponseOneSessionsItemIdMax = 100;
+
+export const saveActivityProfileResponseOneSessionsItemNameMax = 80;
+
+export const saveActivityProfileResponseOneSessionsItemMilesMin = 0.01;
+export const saveActivityProfileResponseOneSessionsItemMilesMax = 200;
+
+export const saveActivityProfileResponseOneSessionsItemDaysItemMin = 0;
+export const saveActivityProfileResponseOneSessionsItemDaysItemMax = 6;
+
+export const saveActivityProfileResponseOneSessionsItemDaysMax = 7;
+
+export const saveActivityProfileResponseOneSessionsMax = 20;
+
+
+
+export const SaveActivityProfileResponse = zod.object({
+  "homeCity": zod.union([zod.object({
+  "id": zod.number().int(),
+  "name": zod.string(),
+  "label": zod.string(),
+  "latitude": zod.number(),
+  "longitude": zod.number()
+}),zod.null()]),
+  "dailyMiles": zod.number().min(saveActivityProfileResponseOneDailyMilesMin).max(saveActivityProfileResponseOneDailyMilesMax),
+  "restDays": zod.array(zod.number().int().min(saveActivityProfileResponseOneRestDaysItemMin).max(saveActivityProfileResponseOneRestDaysItemMax)).max(saveActivityProfileResponseOneRestDaysMax),
+  "commuteMiles": zod.number().min(saveActivityProfileResponseOneCommuteMilesMin).max(saveActivityProfileResponseOneCommuteMilesMax),
+  "commuteDays": zod.array(zod.number().int().min(saveActivityProfileResponseOneCommuteDaysItemMin).max(saveActivityProfileResponseOneCommuteDaysItemMax)).max(saveActivityProfileResponseOneCommuteDaysMax),
+  "sessions": zod.array(zod.object({
+  "id": zod.string().min(1).max(saveActivityProfileResponseOneSessionsItemIdMax),
+  "name": zod.string().min(1).max(saveActivityProfileResponseOneSessionsItemNameMax),
+  "miles": zod.number().min(saveActivityProfileResponseOneSessionsItemMilesMin).max(saveActivityProfileResponseOneSessionsItemMilesMax),
+  "days": zod.array(zod.number().int().min(saveActivityProfileResponseOneSessionsItemDaysItemMin).max(saveActivityProfileResponseOneSessionsItemDaysItemMax)).min(1).max(saveActivityProfileResponseOneSessionsItemDaysMax)
+})).max(saveActivityProfileResponseOneSessionsMax)
+}).and(zod.object({
+  "userId": zod.number().int(),
+  "configured": zod.boolean(),
+  "weeklyMiles": zod.number()
+}))
+
+
+export const estimateMapBodyParticipantCountMax = 10000;
+
+export const estimateMapBodyTotalMilesMin = 0;
+export const estimateMapBodyTotalMilesMax = 100000;
+
+
+
+export const EstimateMapBody = zod.object({
+  "userId": zod.number().int(),
+  "teamId": zod.number().int().nullable(),
+  "participantCount": zod.number().int().min(1).max(estimateMapBodyParticipantCountMax).optional(),
+  "totalMiles": zod.number().min(estimateMapBodyTotalMilesMin).max(estimateMapBodyTotalMilesMax),
+  "today": zod.string(),
+  "endDate": zod.string()
+})
+
+export const EstimateMapResponse = zod.object({
+  "participantCount": zod.number().int(),
+  "actualMemberCount": zod.number().int(),
+  "configuredProfiles": zod.number().int(),
+  "scenario": zod.boolean(),
+  "calendarDays": zod.number().int(),
+  "activeDays": zod.number().int(),
+  "requiredPerPersonDay": zod.number().nullable(),
+  "requiredPerActiveDay": zod.number().nullable(),
+  "milesPerPerson": zod.number(),
+  "weeklyMiles": zod.number(),
+  "projectedMilesByGoal": zod.number(),
+  "expectedFinishDate": zod.string().nullable(),
+  "daysToFinish": zod.number().int().nullable(),
+  "withinGoal": zod.boolean().nullable(),
+  "explanation": zod.string()
+})
+
+
 export const GetRunnerProfileQueryParams = zod.object({
   "userId": zod.coerce.number().int(),
   "today": zod.coerce.string()
 })
 
+export const getRunnerProfileResponseRoutesItemGeometryCoordinatesItemMin = 2;
+export const getRunnerProfileResponseRoutesItemGeometryCoordinatesItemMax = 2;
+
+
+
 export const GetRunnerProfileResponse = zod.object({
   "routes": zod.array(zod.object({
+  "geometry": zod.object({
+  "mode": zod.enum(['virtual', 'walking', 'event', 'preset']),
+  "coordinates": zod.array(zod.array(zod.number()).min(getRunnerProfileResponseRoutesItemGeometryCoordinatesItemMin).max(getRunnerProfileResponseRoutesItemGeometryCoordinatesItemMax)).describe('Ordered latitude longitude pairs'),
+  "origin": zod.object({
+  "id": zod.number().int(),
+  "name": zod.string(),
+  "label": zod.string(),
+  "latitude": zod.number(),
+  "longitude": zod.number()
+}).optional(),
+  "destination": zod.object({
+  "id": zod.number().int(),
+  "name": zod.string(),
+  "label": zod.string(),
+  "latitude": zod.number(),
+  "longitude": zod.number()
+}).optional(),
+  "attribution": zod.string(),
+  "description": zod.string()
+}).optional(),
   "id": zod.number().int(),
   "name": zod.string(),
   "type": zod.string(),
@@ -94,6 +442,14 @@ export const GetMoonStateQueryParams = zod.object({
   "today": zod.coerce.string()
 })
 
+export const getMoonStateResponseJourneysItemGeometryCoordinatesItemMin = 2;
+export const getMoonStateResponseJourneysItemGeometryCoordinatesItemMax = 2;
+
+export const getMoonStateResponseCompetitionTeamsItemGeometryCoordinatesItemMin = 2;
+export const getMoonStateResponseCompetitionTeamsItemGeometryCoordinatesItemMax = 2;
+
+
+
 export const GetMoonStateResponse = zod.object({
   "users": zod.array(zod.object({
   "id": zod.number().int(),
@@ -104,6 +460,27 @@ export const GetMoonStateResponse = zod.object({
   "moonMiles": zod.number(),
   "moonGoal": zod.number(),
   "journeys": zod.array(zod.object({
+  "mapId": zod.number().int().optional(),
+  "geometry": zod.object({
+  "mode": zod.enum(['virtual', 'walking', 'event', 'preset']),
+  "coordinates": zod.array(zod.array(zod.number()).min(getMoonStateResponseJourneysItemGeometryCoordinatesItemMin).max(getMoonStateResponseJourneysItemGeometryCoordinatesItemMax)).describe('Ordered latitude longitude pairs'),
+  "origin": zod.object({
+  "id": zod.number().int(),
+  "name": zod.string(),
+  "label": zod.string(),
+  "latitude": zod.number(),
+  "longitude": zod.number()
+}).optional(),
+  "destination": zod.object({
+  "id": zod.number().int(),
+  "name": zod.string(),
+  "label": zod.string(),
+  "latitude": zod.number(),
+  "longitude": zod.number()
+}).optional(),
+  "attribution": zod.string(),
+  "description": zod.string()
+}).optional(),
   "id": zod.string(),
   "routeId": zod.number().int(),
   "teamId": zod.number().int().nullish(),
@@ -137,6 +514,27 @@ export const GetMoonStateResponse = zod.object({
   "endDate": zod.string(),
   "winnerTeamId": zod.number().int().nullish(),
   "teams": zod.array(zod.object({
+  "mapId": zod.number().int().optional(),
+  "geometry": zod.object({
+  "mode": zod.enum(['virtual', 'walking', 'event', 'preset']),
+  "coordinates": zod.array(zod.array(zod.number()).min(getMoonStateResponseCompetitionTeamsItemGeometryCoordinatesItemMin).max(getMoonStateResponseCompetitionTeamsItemGeometryCoordinatesItemMax)).describe('Ordered latitude longitude pairs'),
+  "origin": zod.object({
+  "id": zod.number().int(),
+  "name": zod.string(),
+  "label": zod.string(),
+  "latitude": zod.number(),
+  "longitude": zod.number()
+}).optional(),
+  "destination": zod.object({
+  "id": zod.number().int(),
+  "name": zod.string(),
+  "label": zod.string(),
+  "latitude": zod.number(),
+  "longitude": zod.number()
+}).optional(),
+  "attribution": zod.string(),
+  "description": zod.string()
+}).optional(),
   "id": zod.string(),
   "routeId": zod.number().int(),
   "teamId": zod.number().int().nullish(),
@@ -174,6 +572,7 @@ export const logRunBodyRequestIdMax = 100;
 
 
 export const LogRunBody = zod.object({
+  "mapId": zod.number().int().optional(),
   "userId": zod.number().int().min(1),
   "routeId": zod.number().int().min(1),
   "teamId": zod.number().int().nullable(),

@@ -5,7 +5,171 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export interface City {
+  id: number;
+  name: string;
+  label: string;
+  latitude: number;
+  longitude: number;
+}
+
+export type MapGeometryMode = typeof MapGeometryMode[keyof typeof MapGeometryMode];
+
+
+export const MapGeometryMode = {
+  virtual: 'virtual',
+  walking: 'walking',
+  event: 'event',
+  preset: 'preset',
+} as const;
+
+export interface MapGeometry {
+  mode: MapGeometryMode;
+  /**
+     * Ordered latitude longitude pairs
+     * @items.minItems 2
+     * @items.maxItems 2
+     */
+  coordinates: number[][];
+  origin?: City;
+  destination?: City;
+  attribution: string;
+  description: string;
+}
+
+export type MapPreviewInputMode = typeof MapPreviewInputMode[keyof typeof MapPreviewInputMode];
+
+
+export const MapPreviewInputMode = {
+  virtual: 'virtual',
+  walking: 'walking',
+} as const;
+
+export interface MapPreviewInput {
+  originId: number;
+  destinationId: number;
+  mode: MapPreviewInputMode;
+}
+
+export interface MapPreview {
+  previewId: string;
+  name: string;
+  totalMiles: number;
+  geometry: MapGeometry;
+}
+
+export interface MapInput {
+  userId: number;
+  /** @nullable */
+  teamId: number | null;
+  routeId?: number;
+  previewId?: string;
+  endDate: string;
+  today: string;
+}
+
+export interface ActivitySession {
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  id: string;
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  name: string;
+  /**
+     * @minimum 0.01
+     * @maximum 200
+     */
+  miles: number;
+  /**
+     * @minItems 1
+     * @maxItems 7
+     * @items.minimum 0
+     * @items.maximum 6
+     */
+  days: number[];
+}
+
+export interface ActivityInput {
+  homeCity: City | null;
+  /**
+     * @minimum 0
+     * @maximum 200
+     */
+  dailyMiles: number;
+  /**
+     * @maxItems 7
+     * @items.minimum 0
+     * @items.maximum 6
+     */
+  restDays: number[];
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  commuteMiles: number;
+  /**
+     * @maxItems 7
+     * @items.minimum 0
+     * @items.maximum 6
+     */
+  commuteDays: number[];
+  /** @maxItems 20 */
+  sessions: ActivitySession[];
+}
+
+export type ActivityProfile = ActivityInput & {
+  userId: number;
+  configured: boolean;
+  weeklyMiles: number;
+};
+
+export interface EstimateInput {
+  userId: number;
+  /** @nullable */
+  teamId: number | null;
+  /**
+     * @minimum 1
+     * @maximum 10000
+     */
+  participantCount?: number;
+  /**
+     * @minimum 0
+     * @maximum 100000
+     */
+  totalMiles: number;
+  today: string;
+  endDate: string;
+}
+
+export interface MapEstimate {
+  participantCount: number;
+  actualMemberCount: number;
+  configuredProfiles: number;
+  scenario: boolean;
+  calendarDays: number;
+  activeDays: number;
+  /** @nullable */
+  requiredPerPersonDay: number | null;
+  /** @nullable */
+  requiredPerActiveDay: number | null;
+  milesPerPerson: number;
+  weeklyMiles: number;
+  projectedMilesByGoal: number;
+  /** @nullable */
+  expectedFinishDate: string | null;
+  /** @nullable */
+  daysToFinish: number | null;
+  /** @nullable */
+  withinGoal: boolean | null;
+  explanation: string;
+}
+
 export interface RouteInfo {
+  geometry?: MapGeometry;
   id: number;
   name: string;
   type: string;
@@ -75,6 +239,8 @@ export interface User {
 }
 
 export interface Journey {
+  mapId?: number;
+  geometry?: MapGeometry;
   id: string;
   routeId: number;
   /** @nullable */
@@ -116,6 +282,7 @@ export interface MoonState {
 }
 
 export interface RunInput {
+  mapId?: number;
   /** @minimum 1 */
   userId: number;
   /** @minimum 1 */
@@ -152,6 +319,14 @@ export interface RunResult {
 export interface HealthStatus {
   status: string;
 }
+
+export type SearchPlacesParams = {
+/**
+ * @minLength 2
+ * @maxLength 100
+ */
+q: string;
+};
 
 export type GetRunnerProfileParams = {
 userId: number;

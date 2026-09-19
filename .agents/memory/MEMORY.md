@@ -1,0 +1,1 @@
+- [Routing response formats](routing-response-formats.md) — Valhalla’s default JSON response ignores GeoJSON shape requests; geometry decoding depends on output format.

@@ -13,6 +13,8 @@ import Competition from '@/pages/competition';
 import Teams from '@/pages/teams';
 import Planner from '@/pages/planner';
 import Stats from '@/pages/stats';
+import Activity from '@/pages/activity';
+import AddMap from '@/pages/add-map';
 import { Layout } from '@/components/layout';
 
 import {
@@ -31,6 +33,7 @@ function Router() {
         <Switch>
           <Route path="/" component={Home} />
           <Route path="/journey/:id" component={JourneyDetail} />
+          <Route path="/maps/add" component={AddMap} />
           <Route path="/log" component={LogRun} />
           <Route path="/completion" component={Completion} />
           <Route path="/passport" component={Passport} />
@@ -38,6 +41,7 @@ function Router() {
           <Route path="/teams" component={Teams} />
           <Route path="/planner" component={Planner} />
           <Route path="/stats" component={Stats} />
+          <Route path="/activity" component={Activity} />
           <Route component={NotFound} />
         </Switch>
       </Layout>

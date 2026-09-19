@@ -13,7 +13,7 @@ router.get("/moon/profile", async (req,res) => {
   const user=(await pool.query("SELECT rest_days FROM moon_users WHERE id=$1",[userId])).rows[0];
   if(!user) {res.status(404).json({error:"Runner not found."});return;}
   const [routes,stamps,teams,totals,dates] = await Promise.all([
-    pool.query(`SELECT id,name,type,total_miles::float8 AS "totalMiles",emoji,gradient_from AS "gradientFrom",gradient_to AS "gradientTo" FROM moon_routes ORDER BY id`),
+    pool.query(`SELECT id,name,type,total_miles::float8 AS "totalMiles",emoji,gradient_from AS "gradientFrom",gradient_to AS "gradientTo",geometry FROM moon_routes r WHERE is_preset OR EXISTS(SELECT 1 FROM moon_maps m WHERE m.route_id=r.id AND (m.solo_user_id=$1 OR m.team_id IN (SELECT team_id FROM moon_members WHERE user_id=$1))) ORDER BY id`,[userId]),
     pool.query(`SELECT s.route_id AS "routeId",r.name AS "routeName",r.emoji,s.earned_at::text AS "earnedAt",s.earned_with_team AS "earnedWithTeam" FROM moon_stamps s JOIN moon_routes r ON r.id=s.route_id WHERE user_id=$1 ORDER BY earned_at DESC`,[userId]),
     pool.query(`SELECT ${receiptColumns} FROM moon_teams WHERE id IN (SELECT team_id FROM moon_members WHERE user_id=$1) ORDER BY id`,[userId]),
     pool.query(`SELECT COALESCE(SUM(miles),0)::float8 AS "totalMiles",COALESCE(SUM(duration_minutes),0)::float8 AS "totalMinutes",COALESCE(MAX(miles),0)::float8 AS "longestRun" FROM moon_runs WHERE user_id=$1`,[userId]),
@@ -24,7 +24,8 @@ router.get("/moon/profile", async (req,res) => {
   // A streak stays current until today ends; count consecutive calendar run days.
   if(!runDays.has(today)) cursor-=86400000;
   while(runDays.has(new Date(cursor).toISOString().slice(0,10))) {currentStreak++;cursor-=86400000;}
-  res.json(GetRunnerProfileResponse.parse({routes:routes.rows,stamps:stamps.rows,teams:teams.rows,...totals.rows[0],mapsCompleted:stamps.rowCount,currentStreak,restDays:user.rest_days}));
+  const completed=(await pool.query(`SELECT (SELECT COUNT(*) FROM moon_map_completions WHERE user_id=$1)+(SELECT COUNT(*) FROM moon_stamps s WHERE s.user_id=$1 AND NOT EXISTS(SELECT 1 FROM moon_map_completions c JOIN moon_maps m ON m.id=c.map_id WHERE c.user_id=s.user_id AND m.route_id=s.route_id)) AS count`,[userId])).rows[0];
+  res.json(GetRunnerProfileResponse.parse({routes:routes.rows.map(r=>({...r,geometry:r.geometry??undefined})),stamps:stamps.rows,teams:teams.rows,...totals.rows[0],mapsCompleted:Number(completed.count),currentStreak,restDays:user.rest_days}));
 });
 
 router.post("/moon/teams",async(req,res)=>{
@@ -36,7 +37,9 @@ router.post("/moon/teams",async(req,res)=>{
   try {
     await c.query("BEGIN");
     const user=await c.query("SELECT id FROM moon_users WHERE id=$1",[v.userId]);
-    const route=await c.query("SELECT id FROM moon_routes WHERE id=$1",[v.routeId]);
+    const route=await c.query(`SELECT r.id FROM moon_routes r WHERE r.id=$1 AND
+      (r.is_preset OR EXISTS(SELECT 1 FROM moon_maps m WHERE m.route_id=r.id AND
+        (m.solo_user_id=$2 OR m.team_id IN (SELECT team_id FROM moon_members WHERE user_id=$2))))`,[v.routeId,v.userId]);
     if(!user.rowCount||!route.rowCount) {await c.query("ROLLBACK");res.status(404).json({error:"Runner or route not found."});return;}
     // Coordinate code generation with other team creators; unique constraint remains the final guard.
     await c.query("SELECT pg_advisory_xact_lock(41201)");
@@ -46,6 +49,7 @@ router.post("/moon/teams",async(req,res)=>{
     while((await c.query("SELECT id FROM moon_teams WHERE invite_code=$1",[code])).rowCount);
     const team=(await c.query(`INSERT INTO moon_teams(name,invite_code,owner_user_id,route_id,end_date) VALUES($1,$2,$3,$4,$5) RETURNING ${receiptColumns}`,[name,code,v.userId,v.routeId,v.endDate])).rows[0];
     await c.query("INSERT INTO moon_members(team_id,user_id) VALUES($1,$2)",[team.id,v.userId]);
+    await c.query("INSERT INTO moon_maps(team_id,route_id,end_date,legacy_key) VALUES($1,$2,$3,$4)",[team.id,v.routeId,v.endDate,`team-${team.id}`]);
     await c.query("COMMIT");res.status(201).json(team);
   } catch(err) {await c.query("ROLLBACK");req.log.error({err},"Team creation failed");res.status(500).json({error:"Could not create your team. Please try again."});}
   finally {c.release();}
@@ -63,8 +67,8 @@ router.post("/moon/teams/join",async(req,res)=>{
     const user=await c.query("SELECT id FROM moon_users WHERE id=$1",[v.userId]);
     if(!team||!user.rowCount) {await c.query("ROLLBACK");res.status(404).json({error:!team?"No team found with that code.":"Runner not found."});return;}
     const existing=await c.query("SELECT id FROM moon_members WHERE team_id=$1 AND user_id=$2",[team.id,v.userId]);
-    const finished=await c.query("SELECT r.total_miles <= COALESCE(SUM(l.miles),0) AS completed FROM moon_routes r LEFT JOIN moon_runs l ON l.route_id=r.id AND l.team_id=$1 WHERE r.id=$2 GROUP BY r.total_miles",[team.id,team.routeId]);
-    if(!existing.rowCount&&finished.rows[0]?.completed) {await c.query("ROLLBACK");res.status(409).json({error:"This team has finished its route. Create a new team to start another journey."});return;}
+    const active=await c.query("SELECT m.id FROM moon_maps m JOIN moon_routes r ON r.id=m.route_id WHERE m.team_id=$1 AND r.total_miles>(SELECT COALESCE(SUM(miles),0) FROM moon_runs WHERE map_id=m.id)",[team.id]);
+    if(!existing.rowCount&&!active.rowCount) {await c.query("ROLLBACK");res.status(409).json({error:"This team has finished all its Maps. Ask a member to add another Map."});return;}
     await c.query("INSERT INTO moon_members(team_id,user_id) VALUES($1,$2) ON CONFLICT(team_id,user_id) DO NOTHING",[team.id,v.userId]);
     await c.query("COMMIT");res.json(team);
   } catch(err) {await c.query("ROLLBACK");req.log.error({err},"Team join failed");res.status(500).json({error:"Could not join the team. Please try again."});}
