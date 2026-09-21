@@ -35,6 +35,19 @@ export interface ProfileInput {
   avatarEmoji?: string;
 }
 
+export interface ProfileUpdateInput {
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  name: string;
+  /**
+     * @minLength 1
+     * @maxLength 16
+     */
+  avatarEmoji: string;
+}
+
 export interface City {
   id: number;
   name: string;

@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { pool } from "@workspace/db";
+import { UpdateRunnerProfileBody } from "@workspace/api-zod";
 import { requireClerk } from "../middlewares/auth";
 import { hashClaimCode } from "../lib/moon-auth";
 
@@ -85,6 +86,31 @@ router.post("/auth/profile", async (req, res): Promise<void> => {
   } finally {
     c.release();
   }
+});
+
+router.put("/auth/profile", async (req, res): Promise<void> => {
+  const parsed = UpdateRunnerProfileBody.safeParse({
+    name: typeof req.body?.name === "string" ? req.body.name.trim() : req.body?.name,
+    avatarEmoji: typeof req.body?.avatarEmoji === "string" ? req.body.avatarEmoji.trim() : req.body?.avatarEmoji,
+  });
+  if (!parsed.success) {
+    res.status(400).json({ error: "Enter a display name and avatar." });
+    return;
+  }
+
+  const runner = (await pool.query(
+    `UPDATE moon_users
+     SET name=$1, avatar_emoji=$2
+     WHERE clerk_subject=$3
+     RETURNING id,name,avatar_emoji AS "avatarEmoji",COALESCE(rest_days,ARRAY[]::integer[]) AS "restDays"`,
+    [parsed.data.name, parsed.data.avatarEmoji, req.clerkSubject!],
+  )).rows[0];
+  if (!runner) {
+    res.status(403).json({ error: "Complete account setup before editing your runner profile." });
+    return;
+  }
+
+  res.json({ provisioned: true, runner });
 });
 
 export default router;

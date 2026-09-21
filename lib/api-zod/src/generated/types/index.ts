@@ -30,6 +30,7 @@ export * from './mapPreviewInput';
 export * from './mapPreviewInputMode';
 export * from './moonState';
 export * from './profileInput';
+export * from './profileUpdateInput';
 export * from './routeInfo';
 export * from './runInput';
 export * from './runnerProfile';

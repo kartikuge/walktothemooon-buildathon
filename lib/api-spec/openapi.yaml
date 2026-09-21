@@ -53,6 +53,22 @@ paths:
           content:
             application/json:
               schema: {$ref: "#/components/schemas/AccountStatus"}
+    put:
+      operationId: updateRunnerProfile
+      security: [{ clerk: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/ProfileUpdateInput"}
+      responses:
+        "200":
+          description: Runner profile updated
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/AccountStatus"}
+        "403":
+          description: Runner account is not provisioned
   /moon/places:
     get:
       operationId: searchPlaces
@@ -276,6 +292,12 @@ components:
       properties:
         name: {type: string, minLength: 1, maxLength: 80}
         avatarEmoji: {type: string, maxLength: 16}
+    ProfileUpdateInput:
+      type: object
+      required: [name, avatarEmoji]
+      properties:
+        name: {type: string, minLength: 1, maxLength: 80}
+        avatarEmoji: {type: string, minLength: 1, maxLength: 16}
     City:
       type: object
       required: [id, name, label, latitude, longitude]

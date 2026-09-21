@@ -61,6 +61,28 @@ export const CreateRunnerProfileResponse = zod.object({
 })
 
 
+export const updateRunnerProfileBodyNameMax = 80;
+
+export const updateRunnerProfileBodyAvatarEmojiMax = 16;
+
+
+
+export const UpdateRunnerProfileBody = zod.object({
+  "name": zod.string().min(1).max(updateRunnerProfileBodyNameMax),
+  "avatarEmoji": zod.string().min(1).max(updateRunnerProfileBodyAvatarEmojiMax)
+})
+
+export const UpdateRunnerProfileResponse = zod.object({
+  "provisioned": zod.boolean(),
+  "runner": zod.union([zod.object({
+  "id": zod.number().int(),
+  "name": zod.string(),
+  "avatarEmoji": zod.string(),
+  "restDays": zod.array(zod.number().int())
+}),zod.null()])
+})
+
+
 export const searchPlacesQueryQMin = 2;
 export const searchPlacesQueryQMax = 100;
 
