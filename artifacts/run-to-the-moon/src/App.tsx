@@ -199,7 +199,12 @@ function AuthGuard({ children }: { children: ReactNode }) {
     isError,
     refetch,
   } = useGetAccountStatus({
-    query: { queryKey: getGetAccountStatusQueryKey(), retry: 1 },
+    query: {
+      queryKey: getGetAccountStatusQueryKey(),
+      retry: 3,
+      retryDelay: attempt => Math.min(500 * 2 ** attempt, 2_000),
+      refetchOnReconnect: true,
+    },
   });
   
   if (isLoading) {
@@ -261,7 +266,12 @@ function OnboardingRedirect() {
     isError,
     refetch,
   } = useGetAccountStatus({
-    query: { queryKey: getGetAccountStatusQueryKey(), retry: 1 },
+    query: {
+      queryKey: getGetAccountStatusQueryKey(),
+      retry: 3,
+      retryDelay: attempt => Math.min(500 * 2 ** attempt, 2_000),
+      refetchOnReconnect: true,
+    },
   });
   if (isLoading) return <AppLoading message="Preparing your runner profile" />;
   if (isError) return <AccountLoadError retry={() => void refetch()} />;

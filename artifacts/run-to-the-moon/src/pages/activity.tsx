@@ -23,7 +23,9 @@ export default function ActivityProfilePage() {
     const { data: profile, isLoading, isError, refetch } = useGetActivityProfile({
     query: { 
       queryKey: getGetActivityProfileQueryKey(),
-      retry: false
+      retry: 2,
+      retryDelay: attempt => Math.min(500 * 2 ** attempt, 2_000),
+      refetchOnReconnect: true
     }
   });
 
