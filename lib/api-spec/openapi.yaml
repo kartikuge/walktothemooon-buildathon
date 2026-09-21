@@ -7,13 +7,56 @@ info:
 servers:
   - url: /api
     description: Base API path
+security:
+  - clerk: []
 tags:
   - name: health
     description: Health operations
 paths:
+  /auth/account:
+    get:
+      operationId: getAccountStatus
+      security: [{ clerk: [] }]
+      responses:
+        "200":
+          description: Current account provisioning status
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/AccountStatus"}
+  /auth/claim:
+    post:
+      operationId: claimRunner
+      security: [{ clerk: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/ClaimInput"}
+      responses:
+        "201":
+          description: Runner claimed
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/AccountStatus"}
+  /auth/profile:
+    post:
+      operationId: createRunnerProfile
+      security: [{ clerk: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/ProfileInput"}
+      responses:
+        "201":
+          description: Runner profile created
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/AccountStatus"}
   /moon/places:
     get:
       operationId: searchPlaces
+      security: []
       parameters:
         - {name: q, in: query, required: true, schema: {type: string, minLength: 2, maxLength: 100}}
       responses:
@@ -73,11 +116,9 @@ paths:
           description: Runner does not own or belong to this Map
         "404":
           description: Map or runner not found
-  /moon/activity/{userId}:
+  /moon/activity:
     get:
       operationId: getActivityProfile
-      parameters:
-        - {name: userId, in: path, required: true, schema: {type: integer}}
       responses:
         "200":
           description: Saved personal activity schedule
@@ -86,8 +127,6 @@ paths:
               schema: {$ref: "#/components/schemas/ActivityProfile"}
     put:
       operationId: saveActivityProfile
-      parameters:
-        - {name: userId, in: path, required: true, schema: {type: integer}}
       requestBody:
         required: true
         content:
@@ -117,7 +156,6 @@ paths:
     get:
       operationId: getRunnerProfile
       parameters:
-        - {name: userId, in: query, required: true, schema: {type: integer}}
         - {name: today, in: query, required: true, schema: {type: string}}
       responses:
         "200":
@@ -146,7 +184,6 @@ paths:
       parameters:
         - {name: teamId, in: path, required: true, schema: {type: integer, minimum: 1}}
         - {name: mapId, in: path, required: true, schema: {type: integer, minimum: 1}}
-        - {name: userId, in: query, required: true, schema: {type: integer, minimum: 1}}
       responses:
         "200":
           description: Challenge-specific rankings, or no rankings when disabled
@@ -177,7 +214,6 @@ paths:
     get:
       operationId: getMoonState
       parameters:
-        - {name: userId, in: query, required: true, schema: {type: integer}}
         - {name: today, in: query, required: true, schema: {type: string}}
       responses:
         "200":
@@ -202,6 +238,7 @@ paths:
   /healthz:
     get:
       operationId: healthCheck
+      security: []
       tags: [health]
       summary: Health check
       description: Returns server health status
@@ -213,7 +250,32 @@ paths:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
 components:
+  securitySchemes:
+    clerk:
+      type: apiKey
+      in: cookie
+      name: __session
   schemas:
+    AccountStatus:
+      type: object
+      required: [provisioned, runner]
+      properties:
+        provisioned: {type: boolean}
+        runner:
+          anyOf:
+            - {$ref: "#/components/schemas/User"}
+            - {type: "null"}
+    ClaimInput:
+      type: object
+      required: [claimCode]
+      properties:
+        claimCode: {type: string, minLength: 8, maxLength: 32}
+    ProfileInput:
+      type: object
+      required: [name]
+      properties:
+        name: {type: string, minLength: 1, maxLength: 80}
+        avatarEmoji: {type: string, maxLength: 16}
     City:
       type: object
       required: [id, name, label, latitude, longitude]
@@ -253,9 +315,8 @@ components:
         geometry: {$ref: "#/components/schemas/MapGeometry"}
     MapInput:
       type: object
-      required: [userId, teamId, endDate, today]
+      required: [teamId, endDate, today]
       properties:
-        userId: {type: integer}
         teamId: {type: [integer, "null"]}
         routeId: {type: integer}
         previewId: {type: string}
@@ -263,9 +324,8 @@ components:
         today: {type: string}
     MapGoalDateInput:
       type: object
-      required: [userId, endDate, today]
+      required: [endDate, today]
       properties:
-        userId: {type: integer, minimum: 1}
         endDate: {type: string}
         today: {type: string}
     ActivitySession:
@@ -300,9 +360,8 @@ components:
             weeklyMiles: {type: number}
     EstimateInput:
       type: object
-      required: [userId, teamId, totalMiles, today, endDate]
+      required: [teamId, totalMiles, today, endDate]
       properties:
-        userId: {type: integer}
         teamId: {type: [integer, "null"]}
         participantCount: {type: integer, minimum: 1, maximum: 10000}
         totalMiles: {type: number, minimum: 0, maximum: 100000}
@@ -354,9 +413,8 @@ components:
         restDays: {type: array, items: {type: integer}}
     TeamInput:
       type: object
-      required: [userId, name, routeId, endDate, today]
+      required: [name, routeId, endDate, today]
       properties:
-        userId: {type: integer, minimum: 1}
         name: {type: string, minLength: 1, maxLength: 80}
         leaderboardEnabled: {type: boolean, default: false}
         routeId: {type: integer, minimum: 1}
@@ -364,9 +422,8 @@ components:
         today: {type: string}
     JoinInput:
       type: object
-      required: [userId, inviteCode]
+      required: [inviteCode]
       properties:
-        userId: {type: integer, minimum: 1}
         inviteCode: {type: string, minLength: 6, maxLength: 6}
     TeamReceipt:
       type: object
@@ -460,10 +517,9 @@ components:
         competition: {$ref: "#/components/schemas/Competition"}
     RunInput:
       type: object
-      required: [userId, routeId, teamId, miles, durationMinutes, loggedAt, requestId]
+      required: [routeId, teamId, miles, durationMinutes, loggedAt, requestId]
       properties:
         mapId: {type: integer}
-        userId: {type: integer, minimum: 1}
         routeId: {type: integer, minimum: 1}
         teamId: {type: [integer, "null"]}
         miles: {type: number, exclusiveMinimum: 0, maximum: 1000}

@@ -1,15 +1,13 @@
-import { useUser } from "@/hooks/use-user";
 import { useGetMoonState, getGetMoonStateQueryKey } from "@workspace/api-client-react";
 import { formatDate } from "@/lib/utils";
 import { Trophy, Crown } from "lucide-react";
 
 export default function Competition() {
-  const { userId } = useUser();
-  const today = formatDate(new Date());
+    const today = formatDate(new Date());
   
   const { data: moonState, isLoading } = useGetMoonState(
-    { userId, today },
-    { query: { queryKey: getGetMoonStateQueryKey({ userId, today }) } }
+    { today },
+    { query: { queryKey: getGetMoonStateQueryKey({ today }) } }
   );
 
   if (isLoading || !moonState) {

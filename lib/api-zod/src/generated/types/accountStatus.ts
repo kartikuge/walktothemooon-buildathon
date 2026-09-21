@@ -5,10 +5,9 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { User } from './user';
 
-export type GetTeamMapLeaderboardParams = {
-/**
- * @minimum 1
- */
-userId: number;
-};
+export interface AccountStatus {
+  provisioned: boolean;
+  runner: User | null;
+}

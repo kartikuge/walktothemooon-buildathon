@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { useUser } from "@/hooks/use-user";
 import { useGetMoonState, useLogRun, getGetMoonStateQueryKey, getGetRunnerProfileQueryKey, getGetTeamMapLeaderboardQueryKey } from "@workspace/api-client-react";
 import { formatDate } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -11,15 +10,14 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 
 export default function LogRun() {
-  const { userId } = useUser();
-  const today = formatDate(new Date());
+    const today = formatDate(new Date());
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
   const { data: moonState, isLoading: isLoadingState, isError: isErrorState } = useGetMoonState(
-    { userId, today },
-    { query: { queryKey: getGetMoonStateQueryKey({ userId, today }) } }
+    { today },
+    { query: { queryKey: getGetMoonStateQueryKey({ today }) } }
   );
 
   const { mutate: logRun, isPending } = useLogRun();
@@ -51,7 +49,7 @@ export default function LogRun() {
 
     logRun({
       data: {
-        userId,
+        
         mapId: journey.mapId,
         routeId: journey.routeId,
         teamId: journey.teamId ?? null,
@@ -76,10 +74,10 @@ export default function LogRun() {
           u.set('moon', res.moonMiles.toString());
           u.set('route', res.routeName);
           u.set('emoji', res.emoji);
-          setLocation(`/completion?${u.toString()}`);
+          setLocation(`/app/completion?${u.toString()}`);
         } else {
           // If not completed, just return home
-          setLocation('/');
+          setLocation('/app');
         }
       },
       onError: (err: any) => {

@@ -14,7 +14,7 @@ export const routes = [route(11, "Fixture Coastal Route"), route(12, "Fixture Mo
 
 export class FixtureApi {
   unexpected: string[] = [];
-  reads: { path: string; userId: string | null }[] = [];
+  reads: { path: string }[] = [];
   writes: { path: string; body: Record<string, unknown> }[] = [];
   allowedWrites = new Set<string>();
   enabled = true;
@@ -34,9 +34,6 @@ export class FixtureApi {
   }
 
   async install(page: Page) {
-    await page.addInitScript(() => {
-      if (!localStorage.getItem("moon_user_id")) localStorage.setItem("moon_user_id", "2");
-    });
     await page.route("**/api/**", async intercepted => {
       const request = intercepted.request();
       const url = new URL(request.url());
@@ -67,7 +64,11 @@ export class FixtureApi {
           return;
         }
       } else {
-        this.reads.push({ path, userId: url.searchParams.get("userId") });
+        this.reads.push({ path });
+        if (path === "/api/auth/account") {
+          await intercepted.fulfill({ json: { provisioned: true, runner: runners[1] } });
+          return;
+        }
         if (path === "/api/moon/state") {
           await intercepted.fulfill({ json: {
             users: runners, moonMiles: 1234 + this.addedMiles, moonGoal: 238855,
@@ -89,9 +90,9 @@ export class FixtureApi {
             } });
           return;
         }
-        if (/^\/api\/moon\/activity\/[123]$/.test(path)) {
+        if (path === "/api/moon/activity") {
           await intercepted.fulfill({ json: {
-            userId: Number(path.split("/").pop()), configured: true, homeCity: null,
+            userId: 2, configured: true, homeCity: null,
             dailyMiles: 1, restDays: [], commuteMiles: 0, commuteDays: [], sessions: [], weeklyMiles: 7,
           } });
           return;

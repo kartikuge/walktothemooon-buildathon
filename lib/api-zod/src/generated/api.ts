@@ -8,6 +8,59 @@
 import * as zod from 'zod';
 
 
+export const GetAccountStatusResponse = zod.object({
+  "provisioned": zod.boolean(),
+  "runner": zod.union([zod.object({
+  "id": zod.number().int(),
+  "name": zod.string(),
+  "avatarEmoji": zod.string(),
+  "restDays": zod.array(zod.number().int())
+}),zod.null()])
+})
+
+
+export const claimRunnerBodyClaimCodeMin = 8;
+export const claimRunnerBodyClaimCodeMax = 32;
+
+
+
+export const ClaimRunnerBody = zod.object({
+  "claimCode": zod.string().min(claimRunnerBodyClaimCodeMin).max(claimRunnerBodyClaimCodeMax)
+})
+
+export const ClaimRunnerResponse = zod.object({
+  "provisioned": zod.boolean(),
+  "runner": zod.union([zod.object({
+  "id": zod.number().int(),
+  "name": zod.string(),
+  "avatarEmoji": zod.string(),
+  "restDays": zod.array(zod.number().int())
+}),zod.null()])
+})
+
+
+export const createRunnerProfileBodyNameMax = 80;
+
+export const createRunnerProfileBodyAvatarEmojiMax = 16;
+
+
+
+export const CreateRunnerProfileBody = zod.object({
+  "name": zod.string().min(1).max(createRunnerProfileBodyNameMax),
+  "avatarEmoji": zod.string().max(createRunnerProfileBodyAvatarEmojiMax).optional()
+})
+
+export const CreateRunnerProfileResponse = zod.object({
+  "provisioned": zod.boolean(),
+  "runner": zod.union([zod.object({
+  "id": zod.number().int(),
+  "name": zod.string(),
+  "avatarEmoji": zod.string(),
+  "restDays": zod.array(zod.number().int())
+}),zod.null()])
+})
+
+
 export const searchPlacesQueryQMin = 2;
 export const searchPlacesQueryQMax = 100;
 
@@ -66,7 +119,6 @@ export const PreviewMapResponse = zod.object({
 
 
 export const AddMapBody = zod.object({
-  "userId": zod.number().int(),
   "teamId": zod.number().int().nullable(),
   "routeId": zod.number().int().optional(),
   "previewId": zod.string().optional(),
@@ -129,11 +181,7 @@ export const UpdateMapGoalDateParams = zod.object({
   "mapId": zod.coerce.number().int()
 })
 
-
-
-
 export const UpdateMapGoalDateBody = zod.object({
-  "userId": zod.number().int().min(1),
   "endDate": zod.string(),
   "today": zod.string()
 })
@@ -185,10 +233,6 @@ export const UpdateMapGoalDateResponse = zod.object({
   "type": zod.string()
 })
 
-
-export const GetActivityProfileParams = zod.object({
-  "userId": zod.coerce.number().int()
-})
 
 export const getActivityProfileResponseOneDailyMilesMin = 0;
 export const getActivityProfileResponseOneDailyMilesMax = 200;
@@ -246,10 +290,6 @@ export const GetActivityProfileResponse = zod.object({
   "weeklyMiles": zod.number()
 }))
 
-
-export const SaveActivityProfileParams = zod.object({
-  "userId": zod.coerce.number().int()
-})
 
 export const saveActivityProfileBodyDailyMilesMin = 0;
 export const saveActivityProfileBodyDailyMilesMax = 200;
@@ -368,7 +408,6 @@ export const estimateMapBodyTotalMilesMax = 100000;
 
 
 export const EstimateMapBody = zod.object({
-  "userId": zod.number().int(),
   "teamId": zod.number().int().nullable(),
   "participantCount": zod.number().int().min(1).max(estimateMapBodyParticipantCountMax).optional(),
   "totalMiles": zod.number().min(estimateMapBodyTotalMilesMin).max(estimateMapBodyTotalMilesMax),
@@ -396,7 +435,6 @@ export const EstimateMapResponse = zod.object({
 
 
 export const GetRunnerProfileQueryParams = zod.object({
-  "userId": zod.coerce.number().int(),
   "today": zod.coerce.string()
 })
 
@@ -459,14 +497,12 @@ export const GetRunnerProfileResponse = zod.object({
 })
 
 
-
 export const createTeamBodyNameMax = 80;
 
 export const createTeamBodyLeaderboardEnabledDefault = false;
 
 
 export const CreateTeamBody = zod.object({
-  "userId": zod.number().int().min(1),
   "name": zod.string().min(1).max(createTeamBodyNameMax),
   "leaderboardEnabled": zod.boolean().default(createTeamBodyLeaderboardEnabledDefault),
   "routeId": zod.number().int().min(1),
@@ -496,13 +532,6 @@ export const GetTeamMapLeaderboardParams = zod.object({
   "mapId": zod.coerce.number().int().min(1)
 })
 
-
-
-
-export const GetTeamMapLeaderboardQueryParams = zod.object({
-  "userId": zod.coerce.number().int().min(1)
-})
-
 export const GetTeamMapLeaderboardResponse = zod.object({
   "teamId": zod.number().int(),
   "mapId": zod.number().int(),
@@ -517,14 +546,12 @@ export const GetTeamMapLeaderboardResponse = zod.object({
 })
 
 
-
 export const joinTeamBodyInviteCodeMin = 6;
 export const joinTeamBodyInviteCodeMax = 6;
 
 
 
 export const JoinTeamBody = zod.object({
-  "userId": zod.number().int().min(1),
   "inviteCode": zod.string().min(joinTeamBodyInviteCodeMin).max(joinTeamBodyInviteCodeMax)
 })
 
@@ -539,7 +566,6 @@ export const JoinTeamResponse = zod.object({
 
 
 export const GetMoonStateQueryParams = zod.object({
-  "userId": zod.coerce.number().int(),
   "today": zod.coerce.string()
 })
 
@@ -660,7 +686,6 @@ export const GetMoonStateResponse = zod.object({
 
 
 
-
 export const logRunBodyMilesExclusiveMin = 0;
 export const logRunBodyMilesMax = 1000;
 
@@ -674,7 +699,6 @@ export const logRunBodyRequestIdMax = 100;
 
 export const LogRunBody = zod.object({
   "mapId": zod.number().int().optional(),
-  "userId": zod.number().int().min(1),
   "routeId": zod.number().int().min(1),
   "teamId": zod.number().int().nullable(),
   "miles": zod.number().gt(logRunBodyMilesExclusiveMin).max(logRunBodyMilesMax),

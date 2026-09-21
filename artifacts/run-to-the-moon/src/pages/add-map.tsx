@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
-import { useUser } from "@/hooks/use-user";
 import { 
   useGetRunnerProfile, 
   useGetMoonState,
@@ -36,18 +35,17 @@ function getRouteImage(name: string) {
 }
 
 export default function AddMap() {
-  const { userId } = useUser();
-  const today = formatDate(new Date());
+    const today = formatDate(new Date());
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
 
   const { data: profile, isLoading: isLoadingProfile, error: profileError, refetch: reloadProfile } = useGetRunnerProfile(
-    { userId, today },
-    { query: { queryKey: getGetRunnerProfileQueryKey({ userId, today }) } }
+    { today },
+    { query: { queryKey: getGetRunnerProfileQueryKey({ today }) } }
   );
 
-  const { data: activityProfile } = useGetActivityProfile(userId);
-  const { data: state, refetch: reloadMaps } = useGetMoonState({userId,today});
+  const { data: activityProfile } = useGetActivityProfile();
+  const { data: state, refetch: reloadMaps } = useGetMoonState({ today });
 
   const [tab, setTab] = useState<"preset" | "custom">("preset");
   
@@ -160,7 +158,7 @@ export default function AddMap() {
     setSaveError("");
 
     const payload = {
-      userId,
+      
       teamId: teamId === "solo" ? null : Number(teamId),
       endDate,
       today
@@ -180,7 +178,7 @@ export default function AddMap() {
         onSuccess: (journey) => {
           queryClient.invalidateQueries({ queryKey: getGetMoonStateQueryKey() });
           queryClient.invalidateQueries({ queryKey: getGetRunnerProfileQueryKey() });
-          setLocation(`/journey/${journey.id}`);
+          setLocation(`/app/journey/${journey.id}`);
         },
         onError: (err: any) => {
           setSaveError(err?.data?.error || err.message || "Could not add this Map. Please try again.");
@@ -370,7 +368,7 @@ export default function AddMap() {
             <option value="solo">Solo Journey</option>
             {profile.teams.map(t => <option key={t.id} value={String(t.id)}>Team: {t.name}</option>)}
           </select>
-          {!profile.teams.length && <p className="text-xs text-muted-foreground">Want to take part together? <Link href="/teams" className="underline">Create or join a team</Link>.</p>}
+          {!profile.teams.length && <p className="text-xs text-muted-foreground">Want to take part together? <Link href="/app/teams" className="underline">Create or join a team</Link>.</p>}
         </div>
         <div className="space-y-2">
           <Label htmlFor="map-goal-date">Goal date (required)</Label>
@@ -378,7 +376,7 @@ export default function AddMap() {
         </div>
         {existingMap && <div role="status" className="rounded-xl bg-secondary p-3 text-sm space-y-2">
           <p>This Map is already {existingMap.completed ? "completed" : "enrolled"} for {teamId === "solo" ? "you" : "this team"}. Your miles stay unchanged.</p>
-          <Link href={`/journey/${existingMap.id}`} className="block underline font-bold text-primary">Open existing Map</Link>
+          <Link href={`/app/journey/${existingMap.id}`} className="block underline font-bold text-primary">Open existing Map</Link>
           <p>Choose another Map or a different participation option to start something new.</p>
         </div>}
         {saveError && <p role="alert" className="rounded-xl bg-secondary p-3 text-sm">{saveError} You can adjust your choices and try again.</p>}
@@ -406,7 +404,7 @@ export default function AddMap() {
           <details className="rounded-2xl border border-border">
             <summary className="p-4 cursor-pointer font-bold">Optional: estimate the effort</summary>
           <EffortCalculator 
-            userId={userId}
+            
             teamId={teamId === "solo" ? null : Number(teamId)}
             totalMiles={activeTotalMiles || 0}
             today={today}

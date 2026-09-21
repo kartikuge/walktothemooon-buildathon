@@ -8,8 +8,7 @@ import { Link } from "wouter";
 import type { MapEstimate } from "@workspace/api-client-react";
 
 interface EffortCalculatorProps {
-  userId: number;
-  teamId: number | null;
+    teamId: number | null;
   totalMiles: number;
   today: string;
   endDate: string;
@@ -25,7 +24,7 @@ function parseLocalDate(ds: string) {
 }
 
 export function EffortCalculator({
-  userId,
+  
   teamId,
   totalMiles,
   today,
@@ -48,7 +47,7 @@ export function EffortCalculator({
     currentReqId.current += 1;
     setLocalResult(null);
     setErrorMsg("");
-  }, [endDate, participantCount, teamId, totalMiles, userId]);
+  }, [endDate, participantCount, teamId, totalMiles]);
 
   const handleEstimate = () => {
     setErrorMsg("");
@@ -74,7 +73,7 @@ export function EffortCalculator({
     
     estimate({
       data: {
-        userId,
+        
         teamId,
         totalMiles,
         today,
@@ -149,7 +148,7 @@ export function EffortCalculator({
             {localResult.explanation}
             {localResult.configuredProfiles === 0 && teamId !== null && !participantCount && (
               <div className="mt-2 pt-2 border-t border-border text-xs text-muted-foreground">
-                Want personalized estimates? <Link href="/activity" className="font-bold underline text-foreground">Set up your activity profile</Link>.
+                Want personalized estimates? <Link href="/app/activity" className="font-bold underline text-foreground">Set up your activity profile</Link>.
               </div>
             )}
           </div>

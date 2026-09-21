@@ -6,15 +6,16 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './accountStatus';
 export * from './activityInput';
 export * from './activityProfile';
 export * from './activitySession';
 export * from './city';
+export * from './claimInput';
 export * from './competition';
 export * from './estimateInput';
 export * from './getMoonStateParams';
 export * from './getRunnerProfileParams';
-export * from './getTeamMapLeaderboardParams';
 export * from './healthStatus';
 export * from './joinInput';
 export * from './journey';
@@ -28,6 +29,7 @@ export * from './mapPreview';
 export * from './mapPreviewInput';
 export * from './mapPreviewInputMode';
 export * from './moonState';
+export * from './profileInput';
 export * from './routeInfo';
 export * from './runInput';
 export * from './runnerProfile';

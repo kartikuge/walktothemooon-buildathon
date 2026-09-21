@@ -46,14 +46,15 @@ test("additive backfill, zero-mile enrollment, isolated completion and replay",a
     assert.equal(state.journeys.find(j=>j.mapId===initial)?.id,`team-${team}`);
     assert.equal(state.journeys.find(j=>j.mapId===solo)?.miles,0);
     assert.equal(state.journeys.find(j=>j.mapId===second)?.miles,0);
-    const handler=(moonRouter as any).stack.find((s:any)=>s.route?.path==="/moon/runs").route.stack[0].handle;
+    const runStack=(moonRouter as any).stack.find((s:any)=>s.route?.path==="/moon/runs").route.stack;
+    const handler=runStack[runStack.length-1].handle;
     async function log(body:unknown) {
       let status=200,result:any;
       const res={status(n:number){status=n;return this;},json(v:unknown){result=v;return this;}};
-      await handler({body,log:{error:()=>{}}},res);
+      await handler({body,runnerId:user,log:{error:()=>{}}},res);
       return {status,result};
     }
-    const body={userId:user,teamId:team,routeId:route,mapId:initial,miles:4,durationMinutes:40,loggedAt:"2026-01-02",requestId:`fixture-complete-${user}`};
+    const body={teamId:team,routeId:route,mapId:initial,miles:4,durationMinutes:40,loggedAt:"2026-01-02",requestId:`fixture-complete-${user}`};
     const first=await log(body);
     assert.equal(first.status,201);assert.equal(first.result.completed,true);
     assert.deepEqual(await log(body),first);
@@ -64,10 +65,11 @@ test("additive backfill, zero-mile enrollment, isolated completion and replay",a
     assert.equal(after.journeys.find(j=>j.mapId===solo)?.miles,0);
     assert.equal((await c.query("SELECT COUNT(*)::int AS n FROM moon_map_completions WHERE map_id=$1",[initial])).rows[0].n,2);
     assert.equal((await c.query("SELECT COUNT(*)::int AS n FROM moon_stamps WHERE user_id IN ($1,$2) AND route_id=$3",[user,peer,route])).rows[0].n,2);
-    const editHandler=(mapsRouter as any).stack.find((s:any)=>s.route?.path==="/moon/maps/:mapId/goal-date").route.stack[0].handle;
+    const editStack=(mapsRouter as any).stack.find((s:any)=>s.route?.path==="/moon/maps/:mapId/goal-date").route.stack;
+    const editHandler=editStack[editStack.length-1].handle;
     async function edit(mapId:number, runner:number, endDate:string) {
       let result:any;
-      await editHandler({params:{mapId:String(mapId)},body:{userId:runner,today:"2026-01-02",endDate}}, {json(v:unknown){result=v;}});
+      await editHandler({params:{mapId:String(mapId)},runnerId:runner,body:{today:"2026-01-02",endDate}}, {json(v:unknown){result=v;}});
       return result;
     }
     const snapshot=async()=>({

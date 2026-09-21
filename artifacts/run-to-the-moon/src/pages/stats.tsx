@@ -1,4 +1,3 @@
-import { useUser } from "@/hooks/use-user";
 import { useGetRunnerProfile, getGetRunnerProfileQueryKey } from "@workspace/api-client-react";
 import { formatDate } from "@/lib/utils";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -6,11 +5,10 @@ import { Trophy, Clock, Map, Flame, Activity, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function Stats() {
-  const { userId } = useUser();
-  const today = formatDate(new Date());
+    const today = formatDate(new Date());
   const { data: profile, isLoading, isError, refetch } = useGetRunnerProfile(
-    { userId, today },
-    { query: { queryKey: getGetRunnerProfileQueryKey({ userId, today }), refetchInterval: 10000 } }
+    { today },
+    { query: { queryKey: getGetRunnerProfileQueryKey({ today }), refetchInterval: 10000 } }
   );
 
   if (isLoading) return <div className="p-8 text-center font-mono text-muted-foreground animate-pulse mt-12">Loading stats...</div>;

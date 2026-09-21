@@ -20,13 +20,14 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AccountStatus,
   ActivityInput,
   ActivityProfile,
   City,
+  ClaimInput,
   EstimateInput,
   GetMoonStateParams,
   GetRunnerProfileParams,
-  GetTeamMapLeaderboardParams,
   HealthStatus,
   JoinInput,
   Journey,
@@ -36,6 +37,7 @@ import type {
   MapPreview,
   MapPreviewInput,
   MoonState,
+  ProfileInput,
   RunInput,
   RunResult,
   RunnerProfile,
@@ -71,6 +73,241 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+export const getGetAccountStatusUrl = () => {
+
+
+
+
+  return `/api/auth/account`
+}
+
+export const getAccountStatus = async ( options?: Parameters<typeof customFetch>[1]): Promise<AccountStatus> => {
+
+  return customFetch<AccountStatus>(getGetAccountStatusUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAccountStatusQueryKey = () => {
+    return [
+    `/api/auth/account`
+    ] as const;
+    }
+
+
+export const getGetAccountStatusQueryOptions = <TData = Awaited<ReturnType<typeof getAccountStatus>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAccountStatus>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAccountStatusQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAccountStatus>>> = ({ signal }) => getAccountStatus({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAccountStatus>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAccountStatusQueryResult = NonNullable<Awaited<ReturnType<typeof getAccountStatus>>>
+export type GetAccountStatusQueryError = ErrorType<unknown>
+
+
+
+export function useGetAccountStatus<TData = Awaited<ReturnType<typeof getAccountStatus>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAccountStatus>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAccountStatusQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getClaimRunnerUrl = () => {
+
+
+
+
+  return `/api/auth/claim`
+}
+
+export const claimRunner = async (claimInput: ClaimInput, options?: Parameters<typeof customFetch>[1]): Promise<AccountStatus> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<AccountStatus>(getClaimRunnerUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(claimInput)
+  }
+);}
+
+
+
+
+
+export const getClaimRunnerMutationKey = () => ['claimRunner'] as const;
+
+export const getClaimRunnerMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof claimRunner>>, TError,ClaimRunnerMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof claimRunner>>, TError,ClaimRunnerMutationVariables, TContext> => {
+
+const mutationKey = getClaimRunnerMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof claimRunner>>, ClaimRunnerMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  claimRunner(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ClaimRunnerMutationResult = NonNullable<Awaited<ReturnType<typeof claimRunner>>>
+    export type ClaimRunnerMutationBody = BodyType<ClaimInput>
+    export type ClaimRunnerMutationError = ErrorType<unknown>
+    export type ClaimRunnerMutationVariables = {data: BodyType<ClaimInput>}
+
+    export const useClaimRunner = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof claimRunner>>, TError,ClaimRunnerMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof claimRunner>>,
+        TError,
+        ClaimRunnerMutationVariables,
+        TContext
+      > => {
+      return useMutation(getClaimRunnerMutationOptions(options));
+    }
+
+export const getCreateRunnerProfileUrl = () => {
+
+
+
+
+  return `/api/auth/profile`
+}
+
+export const createRunnerProfile = async (profileInput: ProfileInput, options?: Parameters<typeof customFetch>[1]): Promise<AccountStatus> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<AccountStatus>(getCreateRunnerProfileUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(profileInput)
+  }
+);}
+
+
+
+
+
+export const getCreateRunnerProfileMutationKey = () => ['createRunnerProfile'] as const;
+
+export const getCreateRunnerProfileMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createRunnerProfile>>, TError,CreateRunnerProfileMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createRunnerProfile>>, TError,CreateRunnerProfileMutationVariables, TContext> => {
+
+const mutationKey = getCreateRunnerProfileMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createRunnerProfile>>, CreateRunnerProfileMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createRunnerProfile(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateRunnerProfileMutationResult = NonNullable<Awaited<ReturnType<typeof createRunnerProfile>>>
+    export type CreateRunnerProfileMutationBody = BodyType<ProfileInput>
+    export type CreateRunnerProfileMutationError = ErrorType<unknown>
+    export type CreateRunnerProfileMutationVariables = {data: BodyType<ProfileInput>}
+
+    export const useCreateRunnerProfile = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createRunnerProfile>>, TError,CreateRunnerProfileMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createRunnerProfile>>,
+        TError,
+        CreateRunnerProfileMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateRunnerProfileMutationOptions(options));
+    }
 
 export const getSearchPlacesUrl = (params: SearchPlacesParams,) => {
   const normalizedParams = new URLSearchParams();
@@ -400,17 +637,17 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       return useMutation(getUpdateMapGoalDateMutationOptions(options));
     }
 
-export const getGetActivityProfileUrl = (userId: number,) => {
+export const getGetActivityProfileUrl = () => {
 
 
 
 
-  return `/api/moon/activity/${userId}`
+  return `/api/moon/activity`
 }
 
-export const getActivityProfile = async (userId: number, options?: Parameters<typeof customFetch>[1]): Promise<ActivityProfile> => {
+export const getActivityProfile = async ( options?: Parameters<typeof customFetch>[1]): Promise<ActivityProfile> => {
 
-  return customFetch<ActivityProfile>(getGetActivityProfileUrl(userId),
+  return customFetch<ActivityProfile>(getGetActivityProfileUrl(),
   {
     ...options,
     method: 'GET'
@@ -423,29 +660,29 @@ export const getActivityProfile = async (userId: number, options?: Parameters<ty
 
 
 
-export const getGetActivityProfileQueryKey = (userId: number,) => {
+export const getGetActivityProfileQueryKey = () => {
     return [
-    `/api/moon/activity/${userId}`
+    `/api/moon/activity`
     ] as const;
     }
 
 
-export const getGetActivityProfileQueryOptions = <TData = Awaited<ReturnType<typeof getActivityProfile>>, TError = ErrorType<unknown>>(userId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getActivityProfile>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetActivityProfileQueryOptions = <TData = Awaited<ReturnType<typeof getActivityProfile>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getActivityProfile>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetActivityProfileQueryKey(userId);
+  const queryKey =  queryOptions?.queryKey ?? getGetActivityProfileQueryKey();
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getActivityProfile>>> = ({ signal }) => getActivityProfile(userId, { signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getActivityProfile>>> = ({ signal }) => getActivityProfile({ signal, ...requestOptions });
 
 
 
 
 
-   return  { queryKey, queryFn, enabled: userId !== null && userId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getActivityProfile>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getActivityProfile>>, TError, TData> & { queryKey: QueryKey }
 }
 
 export type GetActivityProfileQueryResult = NonNullable<Awaited<ReturnType<typeof getActivityProfile>>>
@@ -454,11 +691,11 @@ export type GetActivityProfileQueryError = ErrorType<unknown>
 
 
 export function useGetActivityProfile<TData = Awaited<ReturnType<typeof getActivityProfile>>, TError = ErrorType<unknown>>(
- userId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getActivityProfile>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getActivityProfile>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
-  const queryOptions = getGetActivityProfileQueryOptions(userId,options)
+  const queryOptions = getGetActivityProfileQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
@@ -471,16 +708,15 @@ export function useGetActivityProfile<TData = Awaited<ReturnType<typeof getActiv
 
 
 
-export const getSaveActivityProfileUrl = (userId: number,) => {
+export const getSaveActivityProfileUrl = () => {
 
 
 
 
-  return `/api/moon/activity/${userId}`
+  return `/api/moon/activity`
 }
 
-export const saveActivityProfile = async (userId: number,
-    activityInput: ActivityInput, options?: Parameters<typeof customFetch>[1]): Promise<ActivityProfile> => {
+export const saveActivityProfile = async (activityInput: ActivityInput, options?: Parameters<typeof customFetch>[1]): Promise<ActivityProfile> => {
 
     const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -496,7 +732,7 @@ export const saveActivityProfile = async (userId: number,
     }
     return headers;
   };
-return customFetch<ActivityProfile>(getSaveActivityProfileUrl(userId),
+return customFetch<ActivityProfile>(getSaveActivityProfileUrl(),
   {
     ...options,
     method: 'PUT',
@@ -526,9 +762,9 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof saveActivityProfile>>, SaveActivityProfileMutationVariables> = (props) => {
-          const {userId,data} = props ?? {};
+          const {data} = props ?? {};
 
-          return  saveActivityProfile(userId,data,requestOptions)
+          return  saveActivityProfile(data,requestOptions)
         }
 
 
@@ -541,7 +777,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type SaveActivityProfileMutationResult = NonNullable<Awaited<ReturnType<typeof saveActivityProfile>>>
     export type SaveActivityProfileMutationBody = BodyType<ActivityInput>
     export type SaveActivityProfileMutationError = ErrorType<unknown>
-    export type SaveActivityProfileMutationVariables = {userId: number;data: BodyType<ActivityInput>}
+    export type SaveActivityProfileMutationVariables = {data: BodyType<ActivityInput>}
 
     export const useSaveActivityProfile = <TError = ErrorType<unknown>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveActivityProfile>>, TError,SaveActivityProfileMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
@@ -797,30 +1033,21 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     }
 
 export const getGetTeamMapLeaderboardUrl = (teamId: number,
-    mapId: number,
-    params: GetTeamMapLeaderboardParams,) => {
-  const normalizedParams = new URLSearchParams();
+    mapId: number,) => {
 
-  Object.entries(params || {}).forEach(([key, value]) => {
 
-    if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : String(value))
-    }
-  });
 
-  const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/api/moon/teams/${teamId}/maps/${mapId}/leaderboard?${stringifiedParams}` : `/api/moon/teams/${teamId}/maps/${mapId}/leaderboard`
+  return `/api/moon/teams/${teamId}/maps/${mapId}/leaderboard`
 }
 
 /**
  * Current members only. Actual assigned runs only, without date filtering. Miles descending, ties by ascending user ID; ranks are sequential. Disabled teams return an empty members array. Uses the existing selected-runner membership model, not account authentication.
  */
 export const getTeamMapLeaderboard = async (teamId: number,
-    mapId: number,
-    params: GetTeamMapLeaderboardParams, options?: Parameters<typeof customFetch>[1]): Promise<TeamMapLeaderboard> => {
+    mapId: number, options?: Parameters<typeof customFetch>[1]): Promise<TeamMapLeaderboard> => {
 
-  return customFetch<TeamMapLeaderboard>(getGetTeamMapLeaderboardUrl(teamId,mapId,params),
+  return customFetch<TeamMapLeaderboard>(getGetTeamMapLeaderboardUrl(teamId,mapId),
   {
     ...options,
     method: 'GET'
@@ -834,26 +1061,24 @@ export const getTeamMapLeaderboard = async (teamId: number,
 
 
 export const getGetTeamMapLeaderboardQueryKey = (teamId: number,
-    mapId: number,
-    params?: GetTeamMapLeaderboardParams,) => {
+    mapId: number,) => {
     return [
-    `/api/moon/teams/${teamId}/maps/${mapId}/leaderboard`, ...(params ? [params] : [])
+    `/api/moon/teams/${teamId}/maps/${mapId}/leaderboard`
     ] as const;
     }
 
 
 export const getGetTeamMapLeaderboardQueryOptions = <TData = Awaited<ReturnType<typeof getTeamMapLeaderboard>>, TError = ErrorType<void>>(teamId: number,
-    mapId: number,
-    params: GetTeamMapLeaderboardParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTeamMapLeaderboard>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+    mapId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTeamMapLeaderboard>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetTeamMapLeaderboardQueryKey(teamId,mapId,params);
+  const queryKey =  queryOptions?.queryKey ?? getGetTeamMapLeaderboardQueryKey(teamId,mapId);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTeamMapLeaderboard>>> = ({ signal }) => getTeamMapLeaderboard(teamId,mapId,params, { signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTeamMapLeaderboard>>> = ({ signal }) => getTeamMapLeaderboard(teamId,mapId, { signal, ...requestOptions });
 
 
 
@@ -869,12 +1094,11 @@ export type GetTeamMapLeaderboardQueryError = ErrorType<void>
 
 export function useGetTeamMapLeaderboard<TData = Awaited<ReturnType<typeof getTeamMapLeaderboard>>, TError = ErrorType<void>>(
  teamId: number,
-    mapId: number,
-    params: GetTeamMapLeaderboardParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTeamMapLeaderboard>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+    mapId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTeamMapLeaderboard>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
-  const queryOptions = getGetTeamMapLeaderboardQueryOptions(teamId,mapId,params,options)
+  const queryOptions = getGetTeamMapLeaderboardQueryOptions(teamId,mapId,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

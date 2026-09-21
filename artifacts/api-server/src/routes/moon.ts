@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { pool } from "@workspace/db";
 import { LogRunBody, GetMoonStateResponse } from "@workspace/api-zod";
+import { requireRunner } from "../middlewares/auth";
 
 const router = Router();
 const round = (n: number) => Math.round(n * 100) / 100;
@@ -9,7 +10,15 @@ function validDay(s: string) {
 }
 
 export async function moonState(userId:number, today:string) {
-  const users = (await pool.query('SELECT id,name,avatar_emoji AS "avatarEmoji",rest_days AS "restDays" FROM moon_users ORDER BY id')).rows;
+  const users = (await pool.query(`SELECT id,name,avatar_emoji AS "avatarEmoji",rest_days AS "restDays"
+    FROM moon_users
+    WHERE id=$1 OR id IN (
+      SELECT other.user_id
+      FROM moon_members mine
+      JOIN moon_members other ON other.team_id=mine.team_id
+      WHERE mine.user_id=$1
+    )
+    ORDER BY id`,[userId])).rows;
   const user = users.find(u=>u.id===userId);
   if (!user) throw Object.assign(new Error("Runner not found"),{status:404});
   const routes = (await pool.query("SELECT * FROM moon_routes")).rows;
@@ -44,16 +53,16 @@ export async function moonState(userId:number, today:string) {
   const historical=Number((await pool.query("SELECT historical_miles FROM moon_settings WHERE id=1")).rows[0].historical_miles);
   return GetMoonStateResponse.parse({users,moonMiles:round(historical+runs.reduce((a,r)=>a+Number(r.miles),0)),moonGoal:239000,journeys,dailyTarget:round(journeys.reduce((a,j)=>a+j.dailyTarget,0)),restDay,stamps,competition:{name:competition.name,endDate:competition.end_day,winnerTeamId:competition.winner_team_id,teams:maps.filter(m=>compTeams.includes(m.team_id)&&m.legacy_key===`team-${m.team_id}`&&m.route_id===competition.route_id).map(journey)}});
 }
-router.get("/moon/state", async (req,res) => {
-  const userId=Number(req.query.userId),today=String(req.query.today);
-  if(!Number.isInteger(userId)||!validDay(today)){res.status(400).json({error:"Choose a user and valid date."});return;}
+router.get("/moon/state", requireRunner, async (req,res) => {
+  const userId=req.runnerId!,today=String(req.query.today);
+  if(!validDay(today)){res.status(400).json({error:"Choose a valid date."});return;}
   try {res.json(await moonState(userId,today));} catch(err:any) {if(err.status){res.status(err.status).json({error:err.message});return;}throw err;}
 });
 
-router.post("/moon/runs",async(req,res)=>{
+router.post("/moon/runs",requireRunner,async(req,res)=>{
   const parsed=LogRunBody.safeParse(req.body);
   if(!parsed.success) {res.status(400).json({error:"Enter a positive distance, duration, and valid run date."});return;}
-  const v=parsed.data;
+  const v={...parsed.data,userId:req.runnerId!};
   if(!validDay(v.loggedAt)||v.miles<=0||v.durationMinutes<=0) {res.status(400).json({error:"Enter a valid date, distance and duration."});return;}
   const c=await pool.connect();
   try {

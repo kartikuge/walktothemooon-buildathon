@@ -15,7 +15,7 @@ export default defineConfig({
     serviceWorkers: "block",
   },
   webServer: {
-    command: "PORT=4178 BASE_PATH=/ pnpm run dev",
+    command: "PORT=4178 BASE_PATH=/ VITE_E2E_AUTH=true pnpm run dev",
     url: "http://127.0.0.1:4178",
     reuseExistingServer: false,
   },

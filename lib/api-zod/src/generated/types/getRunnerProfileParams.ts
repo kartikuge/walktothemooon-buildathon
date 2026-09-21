@@ -7,6 +7,5 @@
  */
 
 export type GetRunnerProfileParams = {
-userId: number;
 today: string;
 };

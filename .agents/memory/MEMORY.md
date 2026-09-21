@@ -2,3 +2,4 @@
 - [Runner selection initialization](runner-selection.md) — never render cached default-runner data before resolving the saved demo runner.
 - [Source-package test execution](source-package-tests.md) — bundle tests that import workspace source packages before running Node’s test runner.
 - [Layout regression isolation](layout-regression-isolation.md) — keep visual checks independent of saved runner data and check local bounds, not just page scroll.
+- [Clerk production proxy trust](clerk-production-proxy.md) — publish builds bridge the managed proxy env to Vite, and host-derived keys accept only Replit/custom allowlisted domains.

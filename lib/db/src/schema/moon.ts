@@ -4,6 +4,7 @@ import { sql } from "drizzle-orm";
 export const users = pgTable("moon_users", {
   id: serial("id").primaryKey(), name: text("name").notNull(), avatarEmoji: text("avatar_emoji").notNull(),
   restDays: integer("rest_days").array().notNull().default([6, 0]),
+  clerkSubject: text("clerk_subject").unique(),
 });
 export const routes = pgTable("moon_routes", {
   id: serial("id").primaryKey(), name: text("name").notNull(), type: text("type").notNull(),
@@ -66,4 +67,11 @@ export const stamps = pgTable("moon_stamps", {
 }, t => [unique().on(t.userId, t.routeId)]);
 export const settings = pgTable("moon_settings", {
   id: integer("id").primaryKey(), historicalMiles: numeric("historical_miles").notNull(),
+});
+export const runnerClaims = pgTable("moon_runner_claims", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  codeHash: text("code_hash").notNull().unique(),
+  usedAt: timestamp("used_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });

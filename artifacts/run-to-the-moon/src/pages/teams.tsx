@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useUser } from "@/hooks/use-user";
 import { 
   useGetRunnerProfile, 
   useGetMoonState,
@@ -35,19 +34,18 @@ const joinTeamSchema = z.object({
 });
 
 export default function Teams() {
-  const { userId } = useUser();
-  const today = formatDate(new Date());
+    const today = formatDate(new Date());
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
   const { data: profile, isLoading: isProfileLoading, isError, refetch } = useGetRunnerProfile(
-    { userId, today },
-    { query: { queryKey: getGetRunnerProfileQueryKey({ userId, today }), refetchInterval: 10000 } }
+    { today },
+    { query: { queryKey: getGetRunnerProfileQueryKey({ today }), refetchInterval: 10000 } }
   );
 
   const { data: moonState, isLoading: isMoonLoading, isError: isMoonError, refetch: refetchMoon } = useGetMoonState(
-    { userId, today },
-    { query: { queryKey: getGetMoonStateQueryKey({ userId, today }), refetchInterval: 10000 } }
+    { today },
+    { query: { queryKey: getGetMoonStateQueryKey({ today }), refetchInterval: 10000 } }
   );
 
   const createTeam = useCreateTeam();
@@ -81,7 +79,7 @@ export default function Teams() {
   const onCreateSubmit = (data: z.infer<typeof createTeamSchema>) => {
     createTeam.mutate({
       data: {
-        userId,
+        
         name: data.name,
         routeId: data.routeId,
         endDate: data.endDate,
@@ -105,7 +103,7 @@ export default function Teams() {
   const onJoinSubmit = (data: z.infer<typeof joinTeamSchema>) => {
     joinTeam.mutate({
       data: {
-        userId,
+        
         inviteCode: data.inviteCode.toUpperCase(),
       }
     }, {
@@ -274,7 +272,7 @@ export default function Teams() {
                   <div className="space-y-2 mb-3">
                     {teamJourneys.length === 0 && <p className="text-sm text-muted-foreground italic">No active maps</p>}
                     {teamJourneys.map(j => (
-                      <Link key={j.id} href={`/journey/${j.id}`} className="flex items-center justify-between p-2 rounded-xl hover:bg-secondary transition-colors border border-border">
+                      <Link key={j.id} href={`/app/journey/${j.id}`} className="flex items-center justify-between p-2 rounded-xl hover:bg-secondary transition-colors border border-border">
                         <div className="flex items-center gap-2">
                           <span className="text-xl">{j.emoji}</span>
                           <span className="font-bold text-sm">{j.name}</span>
@@ -287,7 +285,7 @@ export default function Teams() {
                   </div>
                 </div>
                 <CardFooter className="pt-3 pb-3 bg-muted/30 border-t border-border/50">
-                   <Link href={`/competition`} className="text-primary text-sm font-bold uppercase tracking-wider flex items-center gap-1.5 hover:underline w-full justify-center">
+                   <Link href={`/app/competition`} className="text-primary text-sm font-bold uppercase tracking-wider flex items-center gap-1.5 hover:underline w-full justify-center">
                      <LinkIcon size={14} /> View Global Leaderboard
                    </Link>
                 </CardFooter>

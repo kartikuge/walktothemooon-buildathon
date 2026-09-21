@@ -7,7 +7,6 @@
  */
 
 export interface MapInput {
-  userId: number;
   /** @nullable */
   teamId: number | null;
   routeId?: number;

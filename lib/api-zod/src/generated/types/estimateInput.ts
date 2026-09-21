@@ -7,7 +7,6 @@
  */
 
 export interface EstimateInput {
-  userId: number;
   /** @nullable */
   teamId: number | null;
   /**

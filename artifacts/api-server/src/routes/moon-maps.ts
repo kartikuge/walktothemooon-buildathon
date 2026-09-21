@@ -7,6 +7,7 @@ import { activityWeek, calculateEffort } from "../lib/effort";
 import { parseActivityProfile } from "../lib/activity-validation";
 import { moonState } from "./moon";
 import { UpdateMapGoalDateBody, UpdateMapGoalDateResponse } from "@workspace/api-zod";
+import { requireRunner } from "../middlewares/auth";
 
 const router=Router();
 const validDay=(s:string)=>/^\d{4}-\d{2}-\d{2}$/.test(s)&&Number.isFinite(Date.parse(s))&&new Date(s).toISOString().slice(0,10)===s;
@@ -30,17 +31,17 @@ router.get("/moon/places",async(req,res)=>{
   if(!q.success){res.status(400).json({error:"Enter 2–100 characters to search cities."});return;}
   res.json(SearchPlacesResponse.parse(await searchCities(q.data.q)));
 });
-router.post("/moon/map-preview",async(req,res)=>{
+router.post("/moon/map-preview",requireRunner,async(req,res)=>{
   const parsed=PreviewMapBody.safeParse(req.body);
   if(!parsed.success){res.status(400).json({error:"Choose two cities and a route mode."});return;}
   const v=parsed.data,data=await buildGeoPreview(v.originId,v.destinationId,v.mode),previewId=randomUUID();
   await pool.query("INSERT INTO moon_map_previews(id,body) VALUES($1,$2)",[previewId,JSON.stringify(data)]);
   res.json(PreviewMapResponse.parse({previewId,...data}));
 });
-router.post("/moon/maps",async(req,res)=>{
+router.post("/moon/maps",requireRunner,async(req,res)=>{
   const parsed=AddMapBody.safeParse(req.body);
   if(!parsed.success){res.status(400).json({error:"Choose a runner, Map, and goal date."});return;}
-  const v=parsed.data;
+  const v={...parsed.data,userId:req.runnerId!};
   if((v.routeId===undefined)===(v.previewId===undefined)||!validDay(v.today)||!validDay(v.endDate)||v.endDate<v.today) throw fail(400,"Choose exactly one route or preview and a goal on or after today.");
   await requireMember(v.userId,v.teamId);
   const c=await pool.connect();
@@ -71,11 +72,11 @@ router.post("/moon/maps",async(req,res)=>{
   const state=await moonState(v.userId,v.today);
   res.status(201).json(AddMapResponse.parse(state.journeys.find(j=>j.mapId===mapId)));
 });
-router.patch("/moon/maps/:mapId/goal-date",async(req,res)=>{
+router.patch("/moon/maps/:mapId/goal-date",requireRunner,async(req,res)=>{
   const mapId=Number(req.params.mapId);
   const parsed=UpdateMapGoalDateBody.safeParse(req.body);
   if(!Number.isSafeInteger(mapId)||mapId<1||!parsed.success) throw fail(400,"Choose a valid Map, runner, and goal date.");
-  const v=parsed.data;
+  const v={...parsed.data,userId:req.runnerId!};
   if(!validDay(v.today)||!validDay(v.endDate)||v.endDate<v.today) throw fail(400,"Goal date must be a valid date on or after today.");
   await requireUser(v.userId);
   const map=(await pool.query("SELECT id FROM moon_maps WHERE id=$1",[mapId])).rows[0];
@@ -88,11 +89,11 @@ router.patch("/moon/maps/:mapId/goal-date",async(req,res)=>{
   const state=await moonState(v.userId,v.today);
   res.json(UpdateMapGoalDateResponse.parse(state.journeys.find(j=>j.mapId===mapId)));
 });
-router.get("/moon/activity/:userId",async(req,res)=>{
-  const id=Number(req.params.userId);await requireUser(id);res.json(await loadActivity(id));
+router.get("/moon/activity",requireRunner,async(req,res)=>{
+   const id=req.runnerId!;res.json(await loadActivity(id));
 });
-router.put("/moon/activity/:userId",async(req,res)=>{
-  const id=Number(req.params.userId);await requireUser(id);
+router.put("/moon/activity",requireRunner,async(req,res)=>{
+   const id=req.runnerId!;
   const v=parseActivityProfile(req.body);
   if(v.homeCity) v.homeCity=await resolveCity(v.homeCity.id);
   const c=await pool.connect();
@@ -104,10 +105,10 @@ router.put("/moon/activity/:userId",async(req,res)=>{
   }catch(err){await c.query("ROLLBACK");throw err;}finally{c.release();}
   res.json(await loadActivity(id));
 });
-router.post("/moon/estimates",async(req,res)=>{
+router.post("/moon/estimates",requireRunner,async(req,res)=>{
   const parsed=EstimateMapBody.safeParse(req.body);
   if(!parsed.success)throw fail(400,"Enter a valid distance, participant count, and dates.");
-  const v=parsed.data;
+  const v={...parsed.data,userId:req.runnerId!};
   if(!validDay(v.today)||!validDay(v.endDate)||v.endDate<v.today)throw fail(400,"Goal date must be on or after today.");
   await requireMember(v.userId,v.teamId);
   const ids=v.teamId===null?[v.userId]:(await pool.query("SELECT user_id FROM moon_members WHERE team_id=$1 ORDER BY (user_id=$2) DESC,user_id",[v.teamId,v.userId])).rows.map(r=>r.user_id);

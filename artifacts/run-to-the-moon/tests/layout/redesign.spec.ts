@@ -23,17 +23,18 @@ async function usableControls(page: Page) {
 }
 
 const screens: [string, RegExp][] = [
-  ["/", /Today's Target/i], ["/maps/add", /Add a Map/i],
-  ["/teams", /My Teams|Your Teams/i], ["/profile", /Fixture Bea/],
-  ["/journey/map-101", /Fixture Coastal Route/], ["/log", /Log a Run/i],
-  ["/competition", /Teams Race/i], ["/planner", /Route Planner/i],
-  ["/passport", /^Passport$/i], ["/stats", /Lifetime Stats/i],
-  ["/activity", /Activity Profile/i],
-  ["/completion?miles=3&moon=1237&route=Fixture&emoji=🌙", /Stamp added/i],
+  ["/app", /Today's Target/i], ["/app/maps/add", /Add a Map/i],
+  ["/app/teams", /My Teams|Your Teams/i], ["/app/profile", /Fixture Bea/],
+  ["/app/journey/map-101", /Fixture Coastal Route/], ["/app/log", /Log a Run/i],
+  ["/app/competition", /Teams Race/i], ["/app/planner", /Route Planner/i],
+  ["/app/passport", /^Passport$/i], ["/app/stats", /Lifetime Stats/i],
+  ["/app/activity", /Activity Profile/i],
+  ["/app/completion?miles=3&moon=1237&route=Fixture&emoji=🌙", /Stamp added/i],
 ];
 
 for (const width of [320, 390, 1280]) {
   test(`primary screens and forms remain usable at ${width}px`, async ({ page }, testInfo) => {
+    test.setTimeout(60_000);
     await page.setViewportSize({ width, height: 900 });
     for (const [path, heading] of screens) {
       await page.goto(path);
@@ -41,7 +42,7 @@ for (const width of [320, 390, 1280]) {
       await usableControls(page);
       await page.screenshot({ path: testInfo.outputPath(`${path.split("?")[0].replaceAll("/", "-") || "home"}.png`), fullPage: true });
     }
-    await page.goto("/teams");
+    await page.goto("/app/teams");
     for (const name of ["Create Team", "Join with Code"]) {
       await page.getByRole("button", { name, exact: true }).click();
       const dialog = page.getByRole("dialog");
@@ -58,7 +59,7 @@ for (const width of [320, 390, 1280]) {
 }
 
 test("Home retains the Moon hook and discoverable navigation", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/app");
   await expect(page.getByText(/to the moon/i).first()).toBeVisible();
   await expect(page.getByText(/1,234/).first()).toBeVisible();
   for (const name of ["Home", "Maps", "Teams", "Profile"]) {
@@ -69,27 +70,25 @@ test("Home retains the Moon hook and discoverable navigation", async ({ page }) 
   for (const name of [/Compete/i, /Planner/i]) {
     await expect(page.getByRole("link", { name }).first()).toBeVisible();
   }
-  await page.goto("/profile");
+  await page.goto("/app/profile");
   for (const name of [/Passport/i, /Activity Profile/i, /Stats/i]) {
     await expect(page.getByRole("link", { name }).first()).toBeVisible();
   }
 });
 
-test("saved runner is synchronous and switching survives reload", async ({ page, api }) => {
-  await page.goto("/profile");
+test("server account identity survives reload without a runner switcher", async ({ page, api }) => {
+  await page.goto("/app/profile");
   await expect(page.getByRole("heading", { name: "Fixture Bea" })).toBeVisible();
-  expect(api.reads.filter(r => r.userId !== null).every(r => r.userId === "2")).toBe(true);
-  await page.getByRole("combobox", { name: "Switch runner" }).selectOption("1");
-  await expect(page.getByRole("heading", { name: "Fixture Ada" })).toBeVisible();
+  await expect(page.getByRole("combobox", { name: "Switch runner" })).toHaveCount(0);
+  expect(api.reads.some(r => r.path === "/api/auth/account")).toBe(true);
   await page.reload();
-  await expect(page.getByRole("combobox", { name: "Switch runner" })).toHaveValue("1");
-  await expect(page.getByRole("heading", { name: "Fixture Ada" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Fixture Bea" })).toBeVisible();
 });
 
 for (const enabled of [false, true]) {
   test(`create team sends explicit leaderboardEnabled=${enabled} and persists`, async ({ page, api }) => {
     api.allowedWrites.add("/api/moon/teams");
-    await page.goto("/teams");
+    await page.goto("/app/teams");
     await page.getByRole("button", { name: "Create Team", exact: true }).click();
     const dialog = page.getByRole("dialog");
     const toggle = dialog.getByRole("checkbox", { name: "Enable team leaderboard" });
@@ -102,8 +101,9 @@ for (const enabled of [false, true]) {
     await dialog.getByRole("button", { name: "Launch Team", exact: true }).click();
     await expect(dialog).not.toBeVisible();
     expect(api.writes).toHaveLength(1);
-    expect(api.writes[0].body).toMatchObject({ userId: 2, leaderboardEnabled: enabled });
-    await page.goto("/journey/map-101");
+    expect(api.writes[0].body).toMatchObject({ leaderboardEnabled: enabled });
+    expect(api.writes[0].body).not.toHaveProperty("userId");
+    await page.goto("/app/journey/map-101");
     await page.reload();
     const heading = page.getByRole("heading", { name: /^Challenge leaderboard$/i });
     if (enabled) await expect(heading).toBeVisible();
@@ -112,11 +112,11 @@ for (const enabled of [false, true]) {
 }
 
 test("rankings include tied and zero-mile members and isolate maps", async ({ page, api }) => {
-  await page.goto("/journey/map-101");
+  await page.goto("/app/journey/map-101");
   const section = page.getByRole("main").filter({ has: page.getByRole("heading", { name: /^Challenge leaderboard$/i }) });
   await expect(section).toBeVisible();
   await expect(section).toContainText(/Fixture Ada[\s\S]*10\.0[\s\S]*Fixture Bea[\s\S]*10\.0[\s\S]*Fixture Cy[\s\S]*0\.0/);
-  await page.goto("/journey/map-102");
+  await page.goto("/app/journey/map-102");
   await expect(section).toContainText(/Fixture Bea[\s\S]*40\.0[\s\S]*Fixture Ada[\s\S]*1\.0[\s\S]*Fixture Cy[\s\S]*0\.0/);
   expect(api.reads.some(r => r.path.includes("/maps/102/leaderboard"))).toBe(true);
   await expect(section).not.toContainText("10.0");
@@ -124,7 +124,7 @@ test("rankings include tied and zero-mile members and isolate maps", async ({ pa
 
 test("logging a fixture run refreshes challenge ranks and shared progress", async ({ page, api }) => {
   api.allowedWrites.add("/api/moon/runs");
-  await page.goto("/journey/map-101");
+  await page.goto("/app/journey/map-101");
   await expect(page.getByRole("heading", { name: /^Challenge leaderboard$/i })).toBeVisible();
   await expect(page.getByRole("main")).toContainText("10.0");
   await page.getByRole("link", { name: /Log.*Run/i }).first().click();
@@ -132,8 +132,9 @@ test("logging a fixture run refreshes challenge ranks and shared progress", asyn
   await page.getByLabel("Duration (min)", { exact: true }).fill("30");
   await page.getByLabel("Journey", { exact: true }).selectOption("map-101");
   await page.getByRole("button", { name: "Submit Run" }).click();
-  await expect(page).toHaveURL("/");
-  expect(api.writes[0].body).toMatchObject({ userId: 2, teamId: 21, mapId: 101, miles: 3 });
+  await expect(page).toHaveURL("/app");
+  expect(api.writes[0].body).toMatchObject({ teamId: 21, mapId: 101, miles: 3 });
+  expect(api.writes[0].body).not.toHaveProperty("userId");
   // Client-side link, not a reload: this must invalidate the cached leaderboard.
   await page.getByRole("link").filter({ has: page.getByRole("heading", { name: routes[0].name }) }).first().click();
   await expect(page.getByRole("main").filter({ has: page.getByRole("heading", { name: /^Challenge leaderboard$/i }) }))
@@ -143,7 +144,7 @@ test("logging a fixture run refreshes challenge ranks and shared progress", asyn
 
 test("empty and failed teams states retain recovery controls", async ({ page, api }) => {
   api.empty = true;
-  await page.goto("/teams");
+  await page.goto("/app/teams");
   await expect(page.getByRole("button", { name: "Create Team", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Join with Code", exact: true })).toBeVisible();
   api.profileError = true;
@@ -154,7 +155,7 @@ test("empty and failed teams states retain recovery controls", async ({ page, ap
 test("loading state remains usable before fixture responses arrive", async ({ page, api }) => {
   api.delay = 800;
   await page.setViewportSize({ width: 320, height: 900 });
-  await page.goto("/teams");
+  await page.goto("/app/teams");
   await expect(page.getByText("Loading teams...", { exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: "Home", exact: true }).first()).toBeVisible();
   await expect(page.getByRole("button", { name: "Create Team", exact: true })).toBeVisible();

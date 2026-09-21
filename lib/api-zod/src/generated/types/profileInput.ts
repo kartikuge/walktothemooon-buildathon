@@ -6,15 +6,12 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface TeamInput {
+export interface ProfileInput {
   /**
      * @minLength 1
      * @maxLength 80
      */
   name: string;
-  leaderboardEnabled?: boolean;
-  /** @minimum 1 */
-  routeId: number;
-  endDate: string;
-  today: string;
+  /** @maxLength 16 */
+  avatarEmoji?: string;
 }

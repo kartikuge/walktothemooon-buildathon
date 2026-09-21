@@ -5,6 +5,36 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export interface User {
+  id: number;
+  name: string;
+  avatarEmoji: string;
+  restDays: number[];
+}
+
+export interface AccountStatus {
+  provisioned: boolean;
+  runner: User | null;
+}
+
+export interface ClaimInput {
+  /**
+     * @minLength 8
+     * @maxLength 32
+     */
+  claimCode: string;
+}
+
+export interface ProfileInput {
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  name: string;
+  /** @maxLength 16 */
+  avatarEmoji?: string;
+}
+
 export interface City {
   id: number;
   name: string;
@@ -59,7 +89,6 @@ export interface MapPreview {
 }
 
 export interface MapInput {
-  userId: number;
   /** @nullable */
   teamId: number | null;
   routeId?: number;
@@ -69,8 +98,6 @@ export interface MapInput {
 }
 
 export interface MapGoalDateInput {
-  /** @minimum 1 */
-  userId: number;
   endDate: string;
   today: string;
 }
@@ -135,7 +162,6 @@ export type ActivityProfile = ActivityInput & {
 };
 
 export interface EstimateInput {
-  userId: number;
   /** @nullable */
   teamId: number | null;
   /**
@@ -216,8 +242,6 @@ export interface RunnerProfile {
 }
 
 export interface TeamInput {
-  /** @minimum 1 */
-  userId: number;
   /**
      * @minLength 1
      * @maxLength 80
@@ -231,8 +255,6 @@ export interface TeamInput {
 }
 
 export interface JoinInput {
-  /** @minimum 1 */
-  userId: number;
   /**
      * @minLength 6
      * @maxLength 6
@@ -253,13 +275,6 @@ export interface TeamMapLeaderboard {
   mapId: number;
   leaderboardEnabled: boolean;
   members: LeaderboardMember[];
-}
-
-export interface User {
-  id: number;
-  name: string;
-  avatarEmoji: string;
-  restDays: number[];
 }
 
 export interface Journey {
@@ -308,8 +323,6 @@ export interface MoonState {
 export interface RunInput {
   mapId?: number;
   /** @minimum 1 */
-  userId: number;
-  /** @minimum 1 */
   routeId: number;
   /** @nullable */
   teamId: number | null;
@@ -353,19 +366,10 @@ q: string;
 };
 
 export type GetRunnerProfileParams = {
-userId: number;
 today: string;
 };
 
-export type GetTeamMapLeaderboardParams = {
-/**
- * @minimum 1
- */
-userId: number;
-};
-
 export type GetMoonStateParams = {
-userId: number;
 today: string;
 };
 

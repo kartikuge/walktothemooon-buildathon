@@ -7,8 +7,6 @@
  */
 
 export interface MapGoalDateInput {
-  /** @minimum 1 */
-  userId: number;
   endDate: string;
   today: string;
 }

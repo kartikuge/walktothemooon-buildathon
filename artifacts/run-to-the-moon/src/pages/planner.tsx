@@ -1,5 +1,4 @@
 import { useState, useMemo } from "react";
-import { useUser } from "@/hooks/use-user";
 import { useGetRunnerProfile, getGetRunnerProfileQueryKey } from "@workspace/api-client-react";
 import { formatDate } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,12 +11,11 @@ import { Button } from "@/components/ui/button";
 import { planByEndDate, planByDailyMiles } from "@/lib/planner";
 
 export default function Planner() {
-  const { userId } = useUser();
-  const today = formatDate(new Date());
+    const today = formatDate(new Date());
   
   const { data: profile, isLoading, isError, refetch } = useGetRunnerProfile(
-    { userId, today },
-    { query: { queryKey: getGetRunnerProfileQueryKey({ userId, today }), refetchInterval: 10000 } }
+    { today },
+    { query: { queryKey: getGetRunnerProfileQueryKey({ today }), refetchInterval: 10000 } }
   );
 
   const [routeId, setRouteId] = useState<string>("");

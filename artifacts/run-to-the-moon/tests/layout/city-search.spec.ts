@@ -9,9 +9,10 @@ for (const width of [320, 390]) {
       const request = route.request();
       const pathname = new URL(request.url()).pathname;
       const fixtures: Record<string, unknown> = {
+        "/api/auth/account": { provisioned: true, runner: { id: 1, name: "Fixture Runner", avatarEmoji: "FR", restDays: [] } },
         "/api/moon/profile": { teams: [], routes: [] },
         "/api/moon/state": { users: [], journeys: [] },
-        "/api/moon/activity/1": {},
+        "/api/moon/activity": {},
       };
       if (request.method() !== "GET" || !(pathname in fixtures)) {
         unexpectedRequests.push(`${request.method()} ${pathname}`);
@@ -20,8 +21,7 @@ for (const width of [320, 390]) {
       }
       await route.fulfill({ json: fixtures[pathname] });
     });
-    await page.addInitScript(() => localStorage.setItem("moon_user_id", "1"));
-    await page.goto("/maps/add");
+    await page.goto("/app/maps/add");
     await page.getByRole("tab", { name: "City to City", exact: true }).click();
 
     for (const city of ["origin", "destination"]) {

@@ -41,7 +41,7 @@ export default function Completion() {
         </div>
         
         <Link 
-          href="/passport" 
+          href="/app/passport" 
           className="bg-white text-background px-8 py-4 rounded-2xl font-bold text-lg w-full shadow-[0_0_40px_rgba(255,255,255,0.3)] hover:scale-105 active:scale-95 transition-all duration-300"
         >
           View Passport

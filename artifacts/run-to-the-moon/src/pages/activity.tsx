@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useUser } from "@/hooks/use-user";
 import { 
   useGetActivityProfile, 
   useSaveActivityProfile, 
@@ -21,10 +20,9 @@ import { validateActivityProfile, type ActivityValidationErrors } from "@/lib/ac
 const FULL_DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 export default function ActivityProfilePage() {
-  const { userId } = useUser();
-  const { data: profile, isLoading, isError, refetch } = useGetActivityProfile(userId, {
+    const { data: profile, isLoading, isError, refetch } = useGetActivityProfile({
     query: { 
-      queryKey: getGetActivityProfileQueryKey(userId),
+      queryKey: getGetActivityProfileQueryKey(),
       retry: false
     }
   });
@@ -43,7 +41,7 @@ export default function ActivityProfilePage() {
   }
 
   // Remount form completely when user changes to protect against stale success edits
-  return <ActivityProfileForm key={userId} profile={profile} userId={userId} />;
+  return <ActivityProfileForm  profile={profile}  />;
 }
 
 type LocalSession = {
@@ -53,7 +51,7 @@ type LocalSession = {
   days: number[];
 };
 
-function ActivityProfileForm({ profile, userId }: { profile: ActivityProfile; userId: number }) {
+function ActivityProfileForm({ profile}: { profile: ActivityProfile; }) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
@@ -148,7 +146,7 @@ function ActivityProfileForm({ profile, userId }: { profile: ActivityProfile; us
 
     saveProfile(
       {
-        userId,
+        
         data: {
           homeCity,
           dailyMiles: Number(dailyMiles),
@@ -160,7 +158,7 @@ function ActivityProfileForm({ profile, userId }: { profile: ActivityProfile; us
       },
       {
         onSuccess: (data) => {
-          queryClient.setQueryData(getGetActivityProfileQueryKey(userId), data);
+          queryClient.setQueryData(getGetActivityProfileQueryKey(), data);
           queryClient.invalidateQueries({ queryKey: getGetMoonStateQueryKey() });
           queryClient.invalidateQueries({ queryKey: getGetRunnerProfileQueryKey() });
           

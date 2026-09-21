@@ -7,8 +7,6 @@
  */
 
 export interface JoinInput {
-  /** @minimum 1 */
-  userId: number;
   /**
      * @minLength 6
      * @maxLength 6

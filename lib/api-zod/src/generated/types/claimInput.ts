@@ -6,6 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type GetMoonStateParams = {
-today: string;
-};
+export interface ClaimInput {
+  /**
+     * @minLength 8
+     * @maxLength 32
+     */
+  claimCode: string;
+}

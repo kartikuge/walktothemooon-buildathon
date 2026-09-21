@@ -9,8 +9,6 @@
 export interface RunInput {
   mapId?: number;
   /** @minimum 1 */
-  userId: number;
-  /** @minimum 1 */
   routeId: number;
   /** @nullable */
   teamId: number | null;

@@ -1,22 +1,20 @@
 import { Link } from "wouter";
-import { useUser } from "@/hooks/use-user";
 import { useGetMoonState, getGetMoonStateQueryKey, useGetRunnerProfile, getGetRunnerProfileQueryKey } from "@workspace/api-client-react";
 import { formatDate } from "@/lib/utils";
 import { Flame, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function Home() {
-  const { userId } = useUser();
-  const today = formatDate(new Date());
+    const today = formatDate(new Date());
   
   const { data: moonState, isLoading } = useGetMoonState(
-    { userId, today },
-    { query: { queryKey: getGetMoonStateQueryKey({ userId, today }), refetchInterval: 10000 } }
+    { today },
+    { query: { queryKey: getGetMoonStateQueryKey({ today }), refetchInterval: 10000 } }
   );
 
   const { data: profile, isLoading: isProfileLoading, isError: isProfileError, refetch: refetchProfile } = useGetRunnerProfile(
-    { userId, today },
-    { query: { queryKey: getGetRunnerProfileQueryKey({ userId, today }), refetchInterval: 10000 } }
+    { today },
+    { query: { queryKey: getGetRunnerProfileQueryKey({ today }), refetchInterval: 10000 } }
   );
 
   if (isLoading || !moonState) {
@@ -123,7 +121,7 @@ export default function Home() {
       <div className="px-6 mt-10 mb-8">
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-xl font-bold tracking-tight text-foreground">Active Maps</h2>
-          <Link href="/maps/add" className="text-xs font-bold bg-secondary text-foreground px-4 py-2 rounded-full hover:bg-secondary/80 transition-colors uppercase tracking-widest">
+          <Link href="/app/maps/add" className="text-xs font-bold bg-secondary text-foreground px-4 py-2 rounded-full hover:bg-secondary/80 transition-colors uppercase tracking-widest">
             + Add
           </Link>
         </div>
@@ -131,7 +129,7 @@ export default function Home() {
           {journeys.map(j => {
             const jProgress = (j.miles / j.totalMiles) * 100;
             return (
-              <Link key={j.id} href={`/journey/${j.id}`} className="block">
+              <Link key={j.id} href={`/app/journey/${j.id}`} className="block">
                 <div className="bg-card border border-border rounded-[2rem] overflow-hidden shadow-sm hover:shadow-md transition-all active:scale-[0.98]">
                   <div 
                     className="h-32 flex items-center justify-center text-6xl relative" 

@@ -29,9 +29,16 @@ if (!basePath) {
 
 export default defineConfig({
   base: basePath,
+  define: {
+    // Replit provisions CLERK_PROXY_URL for published builds. Expose it to the
+    // browser under Vite's public name without requiring a duplicate secret.
+    'import.meta.env.VITE_CLERK_PROXY_URL': JSON.stringify(
+      process.env.VITE_CLERK_PROXY_URL ?? process.env.CLERK_PROXY_URL ?? '',
+    ),
+  },
   plugins: [
     react(),
-    tailwindcss(),
+    tailwindcss({ optimize: false }),
     runtimeErrorOverlay(),
     ...(process.env.NODE_ENV !== 'production' &&
     process.env.REPL_ID !== undefined

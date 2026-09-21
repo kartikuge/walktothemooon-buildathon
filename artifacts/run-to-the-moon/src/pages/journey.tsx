@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Link, useParams } from "wouter";
-import { useUser } from "@/hooks/use-user";
-import { useGetMoonState, getGetMoonStateQueryKey, useGetTeamMapLeaderboard, getGetTeamMapLeaderboardQueryKey } from "@workspace/api-client-react";
+import { useGetAccountStatus, useGetMoonState, getGetMoonStateQueryKey, useGetTeamMapLeaderboard, getGetTeamMapLeaderboardQueryKey } from "@workspace/api-client-react";
 import { formatDate } from "@/lib/utils";
 import { ArrowLeft, Users } from "lucide-react";
 import { InteractiveMap } from "@/components/interactive-map";
@@ -10,11 +9,11 @@ import { MapGoalDate } from "@/components/map-goal-date";
 import { Trophy, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-function TeamLeaderboard({ teamId, mapId, userId }: { teamId: number, mapId: number, userId: number }) {
+function TeamLeaderboard({ teamId, mapId }: { teamId: number, mapId: number }) {
+  const { data: accountStatus } = useGetAccountStatus();
   const { data: leaderboard, isLoading, isError, refetch } = useGetTeamMapLeaderboard(
     teamId, mapId,
-    { userId },
-    { query: { queryKey: getGetTeamMapLeaderboardQueryKey(teamId, mapId, { userId }), refetchInterval: 10000 } }
+    { query: { queryKey: getGetTeamMapLeaderboardQueryKey(teamId, mapId), refetchInterval: 10000 } }
   );
 
   if (isLoading) {
@@ -56,11 +55,11 @@ function TeamLeaderboard({ teamId, mapId, userId }: { teamId: number, mapId: num
       ) : (
         <div className="space-y-3">
           {leaderboard.members.map(member => (
-            <div key={member.userId} className={`flex items-center justify-between p-3 rounded-xl border ${member.userId === userId ? 'bg-primary/5 border-primary/20' : 'bg-background border-border'}`}>
+            <div key={member.userId} className={`flex items-center justify-between p-3 rounded-xl border ${member.userId === (accountStatus?.runner?.id) ? 'bg-primary/5 border-primary/20' : 'bg-background border-border'}`}>
               <div className="flex items-center gap-3">
                 <div className="w-6 text-center font-bold text-muted-foreground">{member.rank}</div>
                 <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-xl shadow-sm">{member.avatarEmoji}</div>
-                <div className="font-bold text-sm text-foreground">{member.name} {member.userId === userId && "(You)"}</div>
+                <div className="font-bold text-sm text-foreground">{member.name} {member.userId === (accountStatus?.runner?.id) && "(You)"}</div>
               </div>
               <div className="font-mono font-bold text-sm text-foreground">{member.miles.toFixed(1)} <span className="text-muted-foreground text-xs">mi</span></div>
             </div>
@@ -73,12 +72,11 @@ function TeamLeaderboard({ teamId, mapId, userId }: { teamId: number, mapId: num
 
 export default function JourneyDetail() {
   const { id } = useParams<{ id: string }>();
-  const { userId } = useUser();
-  const today = formatDate(new Date());
+    const today = formatDate(new Date());
   
   const { data: moonState, isLoading, isError, refetch: refetchMoon } = useGetMoonState(
-    { userId, today },
-    { query: { queryKey: getGetMoonStateQueryKey({ userId, today }), refetchInterval: 10000 } }
+    { today },
+    { query: { queryKey: getGetMoonStateQueryKey({ today }), refetchInterval: 10000 } }
   );
 
   const journey = moonState?.journeys.find(j => j.id === id);
@@ -101,7 +99,7 @@ export default function JourneyDetail() {
     return (
       <div className="p-6 text-center mt-20">
         <h1 className="text-2xl font-bold mb-2">Journey not found</h1>
-        <Link href="/" className="text-primary font-bold">Return Home</Link>
+        <Link href="/app" className="text-primary font-bold">Return Home</Link>
       </div>
     );
   }
@@ -115,7 +113,7 @@ export default function JourneyDetail() {
         style={{ background: `linear-gradient(135deg, ${journey.gradientFrom}, ${journey.gradientTo})` }}
       >
         <div className="absolute inset-0 opacity-20 mix-blend-overlay bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMSIvPgo8L3N2Zz4=')]"></div>
-        <Link href="/" className="absolute top-4 left-4 bg-black/20 text-white p-3 rounded-full backdrop-blur-md hover:bg-black/40 transition-colors z-10 border border-white/10">
+        <Link href="/app" className="absolute top-4 left-4 bg-black/20 text-white p-3 rounded-full backdrop-blur-md hover:bg-black/40 transition-colors z-10 border border-white/10">
           <ArrowLeft size={20} strokeWidth={3} />
         </Link>
         <div className="drop-shadow-2xl animate-in zoom-in duration-700 ease-out z-10">{journey.emoji}</div>
@@ -154,7 +152,7 @@ export default function JourneyDetail() {
         </div>
 
         {journey.teamId && journey.mapId && (
-          <TeamLeaderboard teamId={journey.teamId} mapId={journey.mapId} userId={userId} />
+          <TeamLeaderboard teamId={journey.teamId} mapId={journey.mapId}  />
         )}
 
         <div className="mb-8">
@@ -164,12 +162,12 @@ export default function JourneyDetail() {
           />
         </div>
 
-        {journey.mapId && <MapGoalDate key={`${userId}-${journey.mapId}`} mapId={journey.mapId} userId={userId} teamId={journey.teamId ?? null} today={today} endDate={journey.endDate} onSaved={() => setCalcDate("")} />}
+        {journey.mapId && <MapGoalDate key={`${journey.mapId}`} mapId={journey.mapId}  teamId={journey.teamId ?? null} today={today} endDate={journey.endDate} onSaved={() => setCalcDate("")} />}
 
         {!journey.completed && (
           <div className="mb-8">
             <EffortCalculator 
-              userId={userId}
+              
               teamId={journey.teamId || null}
               totalMiles={journey.remainingMiles}
               today={today}

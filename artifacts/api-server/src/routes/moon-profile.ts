@@ -3,6 +3,7 @@ import { randomInt } from "node:crypto";
 import { pool } from "@workspace/db";
 import { CreateTeamBody, JoinTeamBody, GetRunnerProfileResponse } from "@workspace/api-zod";
 import { teamMapLeaderboard } from "../lib/team-leaderboard";
+import { requireRunner } from "../middlewares/auth";
 
 const router = Router();
 const dayValid = (s: string) => /^\d{4}-\d{2}-\d{2}$/.test(s) && Number.isFinite(Date.parse(s)) && new Date(s).toISOString().slice(0,10) === s;
@@ -18,9 +19,9 @@ function supportsLeaderboardColumn() {
   return leaderboardColumnSupported;
 }
 
-router.get("/moon/teams/:teamId/maps/:mapId/leaderboard",async(req,res)=>{
+router.get("/moon/teams/:teamId/maps/:mapId/leaderboard",requireRunner,async(req,res)=>{
   try {
-    res.json(await teamMapLeaderboard(Number(req.params.teamId),Number(req.params.mapId),Number(req.query.userId)));
+     res.json(await teamMapLeaderboard(Number(req.params.teamId),Number(req.params.mapId),req.runnerId!));
   } catch(err) {
     const status=(err as {status?:number}).status;
     if(status) {res.status(status).json({error:(err as Error).message});return;}
@@ -29,9 +30,9 @@ router.get("/moon/teams/:teamId/maps/:mapId/leaderboard",async(req,res)=>{
   }
 });
 
-router.get("/moon/profile", async (req,res) => {
-  const userId=Number(req.query.userId), today=String(req.query.today);
-  if(!Number.isInteger(userId)||!dayValid(today)) {res.status(400).json({error:"Choose a runner and valid local date."});return;}
+router.get("/moon/profile", requireRunner, async (req,res) => {
+  const userId=req.runnerId!, today=String(req.query.today);
+  if(!dayValid(today)) {res.status(400).json({error:"Choose a valid local date."});return;}
   const user=(await pool.query("SELECT rest_days FROM moon_users WHERE id=$1",[userId])).rows[0];
   if(!user) {res.status(404).json({error:"Runner not found."});return;}
   const teamReceiptColumns = await supportsLeaderboardColumn() ? receiptColumns : legacyReceiptColumns;
@@ -51,10 +52,10 @@ router.get("/moon/profile", async (req,res) => {
   res.json(GetRunnerProfileResponse.parse({routes:routes.rows.map(r=>({...r,geometry:r.geometry??undefined})),stamps:stamps.rows,teams:teams.rows,...totals.rows[0],mapsCompleted:Number(completed.count),currentStreak,restDays:user.rest_days}));
 });
 
-router.post("/moon/teams",async(req,res)=>{
+router.post("/moon/teams",requireRunner,async(req,res)=>{
   const parsed=CreateTeamBody.safeParse(req.body);
   if(!parsed.success) {res.status(400).json({error:"Enter a team name, route, and end date."});return;}
-  const v=parsed.data,name=v.name.trim();
+  const v={...parsed.data,userId:req.runnerId!},name=v.name.trim();
   if(!name||!dayValid(v.today)||!dayValid(v.endDate)||v.endDate<v.today) {res.status(400).json({error:"Use a team name and an end date on or after today."});return;}
   const c=await pool.connect();
   try {
@@ -78,10 +79,10 @@ router.post("/moon/teams",async(req,res)=>{
   finally {c.release();}
 });
 
-router.post("/moon/teams/join",async(req,res)=>{
+router.post("/moon/teams/join",requireRunner,async(req,res)=>{
   const parsed=JoinTeamBody.safeParse({...req.body,inviteCode:typeof req.body?.inviteCode==="string"?req.body.inviteCode.trim().toUpperCase():req.body?.inviteCode});
   if(!parsed.success) {res.status(400).json({error:"Enter a six-character invite code."});return;}
-  const v=parsed.data,c=await pool.connect();
+  const v={...parsed.data,userId:req.runnerId!},c=await pool.connect();
   try {
     await c.query("BEGIN");
     // Same lock order as run completion: joining and team-wide awards cannot race.

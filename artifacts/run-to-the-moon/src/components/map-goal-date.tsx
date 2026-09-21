@@ -4,8 +4,8 @@ import { getGetMoonStateQueryKey, useUpdateMapGoalDate } from "@workspace/api-cl
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-export function MapGoalDate({ mapId, userId, teamId, today, endDate, onSaved }: {
-  mapId: number; userId: number; teamId: number | null; today: string; endDate: string; onSaved: () => void;
+export function MapGoalDate({ mapId, teamId, today, endDate, onSaved }: {
+  mapId: number; teamId: number | null; today: string; endDate: string; onSaved: () => void;
 }) {
   const client = useQueryClient();
   const mutation = useUpdateMapGoalDate();
@@ -26,7 +26,7 @@ export function MapGoalDate({ mapId, userId, teamId, today, endDate, onSaved }: 
       }
       setError("");
       try {
-        await mutation.mutateAsync({ mapId, data: { userId, today, endDate: draft } });
+        await mutation.mutateAsync({ mapId, data: { today, endDate: draft } });
         await client.invalidateQueries({ queryKey: getGetMoonStateQueryKey() });
         onSaved(); setEditing(false); setSaved(true);
       } catch (err) {
