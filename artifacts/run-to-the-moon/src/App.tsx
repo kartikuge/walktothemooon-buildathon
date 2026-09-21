@@ -1,5 +1,13 @@
 import { type ReactNode, useEffect, useRef } from 'react';
-import { ClerkProvider, SignIn, SignUp, Show, useClerk } from '@clerk/react';
+import {
+  ClerkLoaded,
+  ClerkLoading,
+  ClerkProvider,
+  SignIn,
+  SignUp,
+  Show,
+  useClerk,
+} from '@clerk/react';
 import { publishableKeyFromHost } from '@clerk/react/internal';
 import { shadcn } from '@clerk/themes';
 import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
@@ -7,7 +15,10 @@ import { Route, Switch, useLocation, Redirect, Router as WouterRouter } from 'wo
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { useGetAccountStatus } from "@workspace/api-client-react";
+import {
+  getGetAccountStatusQueryKey,
+  useGetAccountStatus,
+} from "@workspace/api-client-react";
 
 import NotFound from '@/pages/not-found';
 import Landing from '@/pages/landing';
@@ -139,18 +150,64 @@ function ClerkQueryClientCacheInvalidator() {
   return null;
 }
 
-function AuthGuard({ children }: { children: ReactNode }) {
-  const { data: accountStatus, isLoading } = useGetAccountStatus();
-  
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-pulse flex flex-col items-center gap-4">
-          <div className="w-12 h-12 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
-          <p className="text-muted-foreground font-bold tracking-widest uppercase text-sm">Loading</p>
+function AppLoading({ message = "Loading your account" }: { message?: string }) {
+  return (
+    <div
+      className="min-h-[100dvh] flex items-center justify-center bg-background px-6"
+      role="status"
+      aria-live="polite"
+    >
+      <div className="flex flex-col items-center gap-5 text-center">
+        <div className="relative grid h-16 w-16 place-items-center rounded-2xl bg-primary/10 text-3xl shadow-inner">
+          <span aria-hidden="true">🌙</span>
+          <span className="absolute inset-0 animate-ping rounded-2xl border border-primary/30" />
+        </div>
+        <div>
+          <p className="font-black tracking-tight text-foreground">Run to the Moon</p>
+          <p className="mt-1 text-sm font-semibold text-muted-foreground">{message}</p>
         </div>
       </div>
-    );
+    </div>
+  );
+}
+
+function AccountLoadError({ retry }: { retry: () => void }) {
+  return (
+    <div className="min-h-[100dvh] flex items-center justify-center bg-background px-6">
+      <div className="w-full max-w-sm rounded-3xl border border-border bg-card p-7 text-center shadow-sm">
+        <div className="text-4xl" aria-hidden="true">🌙</div>
+        <h1 className="mt-4 text-xl font-black tracking-tight">We couldn't load your account</h1>
+        <p className="mt-2 text-sm font-medium text-muted-foreground">
+          Your sign-in is safe. Check your connection and try loading the account again.
+        </p>
+        <button
+          type="button"
+          onClick={retry}
+          className="mt-6 h-11 w-full rounded-xl bg-primary px-5 font-bold text-primary-foreground transition-opacity hover:opacity-90"
+        >
+          Try again
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function AuthGuard({ children }: { children: ReactNode }) {
+  const {
+    data: accountStatus,
+    isLoading,
+    isError,
+    refetch,
+  } = useGetAccountStatus({
+    query: { queryKey: getGetAccountStatusQueryKey(), retry: 1 },
+  });
+  
+  if (isLoading) {
+    return <AppLoading />;
+  }
+
+  if (isError) {
+    return <AccountLoadError retry={() => void refetch()} />;
   }
 
   if (accountStatus?.provisioned) {
@@ -198,8 +255,16 @@ function HomeRedirect() {
 }
 
 function OnboardingRedirect() {
-  const { data: accountStatus, isLoading } = useGetAccountStatus();
-  if (isLoading) return null;
+  const {
+    data: accountStatus,
+    isLoading,
+    isError,
+    refetch,
+  } = useGetAccountStatus({
+    query: { queryKey: getGetAccountStatusQueryKey(), retry: 1 },
+  });
+  if (isLoading) return <AppLoading message="Preparing your runner profile" />;
+  if (isError) return <AccountLoadError retry={() => void refetch()} />;
   if (accountStatus?.provisioned) {
     return <Redirect to="/app" />
   }
@@ -235,33 +300,38 @@ function ClerkProviderWithRoutes() {
     >
       <QueryClientProvider client={queryClient}>
         <ClerkQueryClientCacheInvalidator />
-        <RoutedErrorBoundary>
-          <Switch>
-            <Route path="/" component={HomeRedirect} />
-            <Route path="/sign-in/*?" component={SignInPage} />
-            <Route path="/sign-up/*?" component={SignUpPage} />
-            
-            <Route path="/onboarding">
-              <AuthShow when="signed-in">
-                <OnboardingRedirect />
-              </AuthShow>
-              <AuthShow when="signed-out">
-                <Redirect to="/sign-in" />
-              </AuthShow>
-            </Route>
+        <ClerkLoading>
+          <AppLoading message="Signing you in" />
+        </ClerkLoading>
+        <ClerkLoaded>
+          <RoutedErrorBoundary>
+            <Switch>
+              <Route path="/" component={HomeRedirect} />
+              <Route path="/sign-in/*?" component={SignInPage} />
+              <Route path="/sign-up/*?" component={SignUpPage} />
+              
+              <Route path="/onboarding">
+                <AuthShow when="signed-in">
+                  <OnboardingRedirect />
+                </AuthShow>
+                <AuthShow when="signed-out">
+                  <Redirect to="/sign-in" />
+                </AuthShow>
+              </Route>
 
-            <Route path="/app/*?">
-              <AuthShow when="signed-in">
-                <ProtectedApp />
-              </AuthShow>
-              <AuthShow when="signed-out">
-                <Redirect to="/" />
-              </AuthShow>
-            </Route>
-            
-            <Route component={NotFound} />
-          </Switch>
-        </RoutedErrorBoundary>
+              <Route path="/app/*?">
+                <AuthShow when="signed-in">
+                  <ProtectedApp />
+                </AuthShow>
+                <AuthShow when="signed-out">
+                  <Redirect to="/" />
+                </AuthShow>
+              </Route>
+              
+              <Route component={NotFound} />
+            </Switch>
+          </RoutedErrorBoundary>
+        </ClerkLoaded>
       </QueryClientProvider>
     </ClerkProvider>
   );
